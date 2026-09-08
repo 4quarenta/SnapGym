@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/sg_colors.dart';
@@ -89,9 +89,7 @@ class FeedPlaceholderScreen extends ConsumerWidget {
           const SizedBox(height: SgSpacing.lg),
           SgPrimaryButton(
             label: 'Fazer check-in',
-            icon: PhosphorIcon(
-              PhosphorIcons.camera(PhosphorIconsStyle.bold),
-            ),
+            icon: const PhosphorIcon(PhosphorIconsBold.camera),
             onPressed: () {},
           ),
           const SizedBox(height: SgSpacing.sm),
