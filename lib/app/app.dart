@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/sg_theme.dart';
+import '../features/updater/presentation/update_gate.dart';
 import 'router/app_router.dart';
 
 class SnapGymApp extends ConsumerWidget {
@@ -18,6 +19,9 @@ class SnapGymApp extends ConsumerWidget {
       darkTheme: SgTheme.dark,
       themeMode: ThemeMode.dark,
       routerConfig: router,
+      builder: (context, child) {
+        return UpdateGate(child: child ?? const SizedBox.shrink());
+      },
     );
   }
 }
