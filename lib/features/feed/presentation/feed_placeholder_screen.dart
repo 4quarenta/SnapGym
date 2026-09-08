@@ -89,7 +89,9 @@ class FeedPlaceholderScreen extends ConsumerWidget {
           const SizedBox(height: SgSpacing.lg),
           SgPrimaryButton(
             label: 'Fazer check-in',
-            icon: PhosphorIcon(PhosphorIcons.bold.camera),
+            icon: PhosphorIcon(
+              PhosphorIcons.camera(PhosphorIconsStyle.bold),
+            ),
             onPressed: () {},
           ),
           const SizedBox(height: SgSpacing.sm),
