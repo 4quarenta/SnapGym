@@ -165,7 +165,7 @@ jobs:
           - observação opcional de até 280 caracteres
           - persistência com RLS e vínculo ao usuário autenticado
           - feed autenticado com fotos por URL assinada
-          - rollback do arquivo se a gravação do check-in falhar
+          - evidência sem permissão de exclusão pelo cliente
 
           ### Android
           **`SnapGym-Android-dev.apk`** pode ser instalado diretamente em um aparelho Android com instalação de fontes externas habilitada.
