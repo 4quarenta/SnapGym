@@ -24,28 +24,38 @@ class ScaffoldWithNavigation extends StatelessWidget {
         },
         destinations: <NavigationDestination>[
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.regular.house),
-            selectedIcon: PhosphorIcon(PhosphorIcons.fill.house),
+            icon: PhosphorIcon(PhosphorIcons.house()),
+            selectedIcon: PhosphorIcon(
+              PhosphorIcons.house(PhosphorIconsStyle.fill),
+            ),
             label: 'Início',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.regular.compass),
-            selectedIcon: PhosphorIcon(PhosphorIcons.fill.compass),
+            icon: PhosphorIcon(PhosphorIcons.compass()),
+            selectedIcon: PhosphorIcon(
+              PhosphorIcons.compass(PhosphorIconsStyle.fill),
+            ),
             label: 'Explorar',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.regular.camera),
-            selectedIcon: PhosphorIcon(PhosphorIcons.fill.camera),
+            icon: PhosphorIcon(PhosphorIcons.camera()),
+            selectedIcon: PhosphorIcon(
+              PhosphorIcons.camera(PhosphorIconsStyle.fill),
+            ),
             label: 'Check-in',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.regular.chartBar),
-            selectedIcon: PhosphorIcon(PhosphorIcons.fill.chartBar),
+            icon: PhosphorIcon(PhosphorIcons.chartBar()),
+            selectedIcon: PhosphorIcon(
+              PhosphorIcons.chartBar(PhosphorIconsStyle.fill),
+            ),
             label: 'Ranking',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.regular.user),
-            selectedIcon: PhosphorIcon(PhosphorIcons.fill.user),
+            icon: PhosphorIcon(PhosphorIcons.user()),
+            selectedIcon: PhosphorIcon(
+              PhosphorIcons.user(PhosphorIconsStyle.fill),
+            ),
             label: 'Perfil',
           ),
         ],
