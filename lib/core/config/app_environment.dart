@@ -4,10 +4,10 @@ enum AppEnvironment {
   prod;
 
   String get label => switch (this) {
-        AppEnvironment.dev => 'DEV',
-        AppEnvironment.staging => 'STAGING',
-        AppEnvironment.prod => 'PROD',
-      };
+    AppEnvironment.dev => 'DEV',
+    AppEnvironment.staging => 'STAGING',
+    AppEnvironment.prod => 'PROD',
+  };
 
   bool get isProduction => this == AppEnvironment.prod;
 }

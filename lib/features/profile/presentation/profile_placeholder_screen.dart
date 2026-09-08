@@ -18,12 +18,14 @@ class ProfilePlaceholderScreen extends StatelessWidget {
             const SizedBox(height: SgSpacing.xxl),
             Text(
               'Perfil',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xs),
-            Text('Histórico, sequência e dados sociais do usuário entrarão aqui.'),
+            Text(
+              'Histórico, sequência e dados sociais do usuário entrarão aqui.',
+            ),
           ],
         ),
       ),

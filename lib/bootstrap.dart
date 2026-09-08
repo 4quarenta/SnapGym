@@ -20,9 +20,7 @@ Future<void> bootstrap(AppEnvironment environment) async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        appConfigProvider.overrideWithValue(config),
-      ],
+      overrides: [appConfigProvider.overrideWithValue(config)],
       child: const SnapGymApp(),
     ),
   );

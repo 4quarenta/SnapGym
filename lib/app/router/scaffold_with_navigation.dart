@@ -3,10 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 class ScaffoldWithNavigation extends StatelessWidget {
-  const ScaffoldWithNavigation({
-    required this.navigationShell,
-    super.key,
-  });
+  const ScaffoldWithNavigation({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 

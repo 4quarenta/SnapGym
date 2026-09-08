@@ -18,9 +18,9 @@ class ExplorePlaceholderScreen extends StatelessWidget {
             const SizedBox(height: SgSpacing.xxl),
             Text(
               'Explorar',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xs),
             Text('Descoberta social será implementada nesta feature.'),

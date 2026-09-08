@@ -18,12 +18,14 @@ class RankingPlaceholderScreen extends StatelessWidget {
             const SizedBox(height: SgSpacing.xxl),
             Text(
               'Ranking',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xs),
-            Text('Pontuação e ranking serão calculados pelo backend, nunca pelo cliente.'),
+            Text(
+              'Pontuação e ranking serão calculados pelo backend, nunca pelo cliente.',
+            ),
           ],
         ),
       ),

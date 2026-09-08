@@ -27,8 +27,9 @@ abstract final class SgTheme {
     final base = ThemeData(
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor:
-          isDark ? SgColors.darkBackground : SgColors.lightBackground,
+      scaffoldBackgroundColor: isDark
+          ? SgColors.darkBackground
+          : SgColors.lightBackground,
       useMaterial3: true,
     );
 
@@ -66,8 +67,7 @@ abstract final class SgTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor:
-            isDark ? SgColors.darkSurface : SgColors.lightSurface,
+        backgroundColor: isDark ? SgColors.darkSurface : SgColors.lightSurface,
         indicatorColor: SgColors.orange.withValues(alpha: 0.14),
         height: 72,
       ),

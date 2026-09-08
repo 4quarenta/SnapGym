@@ -14,9 +14,7 @@ final appRouterProvider = Provider<GoRouter>(
     routes: <RouteBase>[
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return ScaffoldWithNavigation(
-            navigationShell: navigationShell,
-          );
+          return ScaffoldWithNavigation(navigationShell: navigationShell);
         },
         branches: <StatefulShellBranch>[
           StatefulShellBranch(

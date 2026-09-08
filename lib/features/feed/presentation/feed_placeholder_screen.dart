@@ -118,9 +118,7 @@ class _EnvironmentBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: SgColors.moonstone.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(SgRadius.pill),
-        border: Border.all(
-          color: SgColors.moonstone.withValues(alpha: 0.45),
-        ),
+        border: Border.all(color: SgColors.moonstone.withValues(alpha: 0.45)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -130,10 +128,10 @@ class _EnvironmentBadge extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: SgColors.moonstone,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-              ),
+            color: SgColors.moonstone,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.8,
+          ),
         ),
       ),
     );
@@ -170,15 +168,15 @@ class _ColorSwatch extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: foreground,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: foreground,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: foreground.withValues(alpha: 0.82),
-                ),
+              color: foreground.withValues(alpha: 0.82),
+            ),
           ),
         ],
       ),

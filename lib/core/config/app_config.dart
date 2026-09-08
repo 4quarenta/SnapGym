@@ -17,8 +17,9 @@ class AppConfig {
     return AppConfig(
       environment: environment,
       supabaseUrl: const String.fromEnvironment('SUPABASE_URL'),
-      supabasePublishableKey:
-          const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY'),
+      supabasePublishableKey: const String.fromEnvironment(
+        'SUPABASE_PUBLISHABLE_KEY',
+      ),
     );
   }
 

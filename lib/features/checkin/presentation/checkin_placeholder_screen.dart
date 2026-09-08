@@ -18,9 +18,9 @@ class CheckinPlaceholderScreen extends StatelessWidget {
             const SizedBox(height: SgSpacing.xxl),
             Text(
               'Check-in',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xs),
             Text('Câmera, evidência e publicação de treino entrarão aqui.'),

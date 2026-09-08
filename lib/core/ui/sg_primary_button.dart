@@ -15,10 +15,7 @@ class SgPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (icon == null) {
-      return FilledButton(
-        onPressed: onPressed,
-        child: Text(label),
-      );
+      return FilledButton(onPressed: onPressed, child: Text(label));
     }
 
     return FilledButton.icon(
