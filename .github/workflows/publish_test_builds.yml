@@ -1,0 +1,188 @@
+name: Publish Test Builds
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/publish_test_builds.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapgym-test-release
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android test APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.2"
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Build dev APK
+        run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
+
+      - name: Prepare APK
+        run: cp build/app/outputs/flutter-apk/app-dev-debug.apk SnapGym-Android-dev.apk
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapgym-android-test
+          path: SnapGym-Android-dev.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  ios-simulator:
+    name: iOS Simulator test build
+    runs-on: macos-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.2"
+          channel: stable
+          cache: true
+
+      - name: Generate iOS project
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          preserve=(
+            pubspec.yaml
+            analysis_options.yaml
+            README.md
+            .gitignore
+            .env.example
+            lib
+            test
+            docs
+            .github
+            tool
+          )
+
+          for item in "${preserve[@]}"; do
+            if [ -e "$item" ]; then
+              cp -a "$item" "$tmp/"
+            fi
+          done
+
+          flutter create --platforms=ios --org com.snapgym --project-name snapgym .
+
+          for item in "${preserve[@]}"; do
+            if [ -e "$tmp/$item" ]; then
+              rm -rf "$item"
+              cp -a "$tmp/$item" "$item"
+            fi
+          done
+
+          rm -rf "$tmp"
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Build iOS Simulator app
+        run: flutter build ios --simulator --debug -t lib/main_dev.dart
+
+      - name: Package iOS Simulator app
+        run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app SnapGym-iOS-Simulator-dev.app.zip
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapgym-ios-simulator-test
+          path: SnapGym-iOS-Simulator-dev.app.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish GitHub pre-release
+    needs: [android, ios-simulator]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: snapgym-android-test
+          path: release-assets
+
+      - name: Download iOS build
+        uses: actions/download-artifact@v4
+        with:
+          name: snapgym-ios-simulator-test
+          path: release-assets
+
+      - name: Create release notes
+        run: |
+          cat > RELEASE_NOTES.md <<'EOF'
+          ## SnapGym — Test Build v0.1.0
+
+          Build técnico da fundação do SnapGym para validação.
+
+          ### Android
+          **`SnapGym-Android-dev.apk`** pode ser instalado diretamente em um aparelho Android com instalação de fontes externas habilitada.
+
+          ### iOS
+          **`SnapGym-iOS-Simulator-dev.app.zip`** é um build para o iOS Simulator e não pode ser instalado diretamente em um iPhone físico.
+
+          Para disponibilizar um **IPA instalável em iPhone real**, será necessário configurar Apple Developer, certificado de assinatura e provisioning/TestFlight.
+
+          ### Estado da fundação
+          - Flutter 3.47.2
+          - Material 3 + SnapGym Design System
+          - Riverpod
+          - go_router
+          - ambientes dev/staging/prod
+          - Android validado em CI
+          - build iOS validado em macOS CI
+          EOF
+
+      - name: Publish or update GitHub pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="test-v0.1.0"
+          TITLE="SnapGym Test Build v0.1.0"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes-file RELEASE_NOTES.md \
+              --prerelease
+            gh release upload "$TAG" release-assets/* --clobber
+          else
+            gh release create "$TAG" release-assets/* \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes-file RELEASE_NOTES.md \
+              --prerelease
+          fi
