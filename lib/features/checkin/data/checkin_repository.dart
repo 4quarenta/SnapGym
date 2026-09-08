@@ -59,26 +59,14 @@ class CheckinRepository {
       ),
     );
 
-    try {
-      await _requireClient.from('checkins').insert(<String, dynamic>{
-        'user_id': user.id,
-        'workout_type': workoutType.dbValue,
-        'duration_minutes': durationMinutes,
-        'note': note.trim().isEmpty ? null : note.trim(),
-        'photo_path': objectPath,
-        'performed_at': now.toIso8601String(),
-      });
-    } catch (_) {
-      try {
-        await _requireClient.storage.from(MediaStorage.checkinBucket).remove([
-          objectPath,
-        ]);
-      } catch (_) {
-        // The database error is the primary failure. A later cleanup job can
-        // remove a rare orphan if the compensating delete also fails.
-      }
-      rethrow;
-    }
+    await _requireClient.from('checkins').insert(<String, dynamic>{
+      'user_id': user.id,
+      'workout_type': workoutType.dbValue,
+      'duration_minutes': durationMinutes,
+      'note': note.trim().isEmpty ? null : note.trim(),
+      'photo_path': objectPath,
+      'performed_at': now.toIso8601String(),
+    });
   }
 
   String _buildObjectPath(String userId, DateTime timestamp) {
