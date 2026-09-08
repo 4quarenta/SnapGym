@@ -6,9 +6,9 @@ import '../../features/auth/presentation/backend_configuration_screen.dart';
 import '../../features/auth/presentation/check_email_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
-import '../../features/checkin/presentation/checkin_placeholder_screen.dart';
+import '../../features/checkin/presentation/checkin_screen.dart';
 import '../../features/explore/presentation/explore_placeholder_screen.dart';
-import '../../features/feed/presentation/feed_placeholder_screen.dart';
+import '../../features/feed/presentation/feed_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/ranking/presentation/ranking_placeholder_screen.dart';
 import 'scaffold_with_navigation.dart';
@@ -64,7 +64,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: <RouteBase>[
               GoRoute(
                 path: '/feed',
-                builder: (context, state) => const FeedPlaceholderScreen(),
+                builder: (context, state) => const FeedScreen(),
               ),
             ],
           ),
@@ -80,7 +80,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: <RouteBase>[
               GoRoute(
                 path: '/checkin',
-                builder: (context, state) => const CheckinPlaceholderScreen(),
+                builder: (context, state) => const CheckinScreen(),
               ),
             ],
           ),

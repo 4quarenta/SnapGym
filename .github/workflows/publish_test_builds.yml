@@ -107,6 +107,7 @@ jobs:
           done
 
           rm -rf "$tmp"
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string SnapGym uses the camera to register workout evidence." ios/Runner/Info.plist || true
 
       - name: Dependencies
         run: flutter pub get
@@ -152,18 +153,19 @@ jobs:
       - name: Create release notes
         run: |
           cat > RELEASE_NOTES.md <<'EOF'
-          ## SnapGym — Test Build v0.2.0
+          ## SnapGym — Test Build v0.3.0
 
-          Build de desenvolvimento conectado ao backend exclusivo do SnapGym.
+          Primeira vertical funcional de treino social do SnapGym.
 
           ### Incluído
-          - cadastro por e-mail e senha
-          - confirmação de e-mail
-          - login e persistência de sessão
-          - perfil social inicial
-          - edição de nome, @username e bio
-          - logout
-          - RLS no Supabase
+          - captura de foto diretamente pela câmera
+          - compressão da evidência antes do upload
+          - bucket privado de mídia no Supabase de desenvolvimento
+          - check-in obrigatório com tipo de treino e duração
+          - observação opcional de até 280 caracteres
+          - persistência com RLS e vínculo ao usuário autenticado
+          - feed autenticado com fotos por URL assinada
+          - evidência sem permissão de exclusão pelo cliente
 
           ### Android
           **`SnapGym-Android-dev.apk`** pode ser instalado diretamente em um aparelho Android com instalação de fontes externas habilitada.
@@ -171,7 +173,7 @@ jobs:
           ### iOS
           **`SnapGym-iOS-Simulator-dev.app.zip`** é um build para o iOS Simulator e não pode ser instalado diretamente em um iPhone físico.
 
-          Um IPA para iPhone real exigirá Apple Developer e assinatura/provisioning.
+          O Supabase Storage desta build é provisório para desenvolvimento. A camada de dados foi mantida separada para permitir migração futura de mídia para R2/VPS sem reescrever a interface.
           EOF
 
       - name: Publish or update GitHub pre-release
@@ -180,8 +182,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TAG="test-v0.2.0"
-          TITLE="SnapGym Test Build v0.2.0"
+          TAG="test-v0.3.0"
+          TITLE="SnapGym Test Build v0.3.0"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" \
