@@ -24,7 +24,8 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Bootstrap Android
+      - name: Bootstrap Android when missing
+        if: ${{ hashFiles('android/app/build.gradle.kts') == '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -58,7 +59,9 @@ jobs:
           done
 
           rm -rf "$tmp"
-          python3 tool/configure_android_flavors.py
+
+      - name: Configure Android flavors
+        run: python3 tool/configure_android_flavors.py
 
       - name: Dependencies
         run: flutter pub get
@@ -72,18 +75,7 @@ jobs:
       - name: Test
         run: flutter test
 
-      - name: Build Android dev APK
-        run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
-
-      - name: Upload dev APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: snapgym-dev-debug-apk
-          path: build/app/outputs/flutter-apk/app-dev-debug.apk
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Commit generated foundation
+      - name: Persist generated Android foundation
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
@@ -95,3 +87,15 @@ jobs:
             git commit -m "chore: finalize Flutter Android foundation"
             git push
           fi
+
+      - name: Build Android dev APK
+        timeout-minutes: 12
+        run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
+
+      - name: Upload dev APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapgym-dev-debug-apk
+          path: build/app/outputs/flutter-apk/app-dev-debug.apk
+          if-no-files-found: error
+          retention-days: 14
