@@ -130,7 +130,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
           _PhotoCapture(photo: _photo, onTakePhoto: _takePhoto),
           const SizedBox(height: SgSpacing.lg),
           DropdownButtonFormField<WorkoutType>(
-            value: _workoutType,
+            initialValue: _workoutType,
             decoration: const InputDecoration(labelText: 'Tipo de treino'),
             items: WorkoutType.values
                 .map(
