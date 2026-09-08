@@ -15,17 +15,15 @@ import '../domain/app_update.dart';
 final updateRepositoryProvider = Provider<UpdateRepository>((ref) {
   final config = ref.watch(appConfigProvider);
   return UpdateRepository(
-    client: ref.watch(supabaseClientProvider),
-    channel: config.environment.name,
+    ref.watch(supabaseClientProvider),
+    config.environment.name,
   );
 });
 
 enum UpdateInstallResult { started, permissionRequired }
 
 class UpdateRepository {
-  UpdateRepository({required SupabaseClient? client, required String channel})
-      : _client = client,
-        _channel = channel;
+  UpdateRepository(this._client, this._channel);
 
   static const _nativeChannel = MethodChannel('snapgym/updater');
 
