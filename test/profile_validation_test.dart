@@ -16,7 +16,9 @@ void main() {
   });
 
   test('limits bio to 160 characters', () {
-    expect(ProfileValidation.bio('a' * 160), isNull);
-    expect(ProfileValidation.bio('a' * 161), isNotNull);
+    final validBio = List<String>.filled(160, 'a').join();
+    final invalidBio = List<String>.filled(161, 'a').join();
+    expect(ProfileValidation.bio(validBio), isNull);
+    expect(ProfileValidation.bio(invalidBio), isNotNull);
   });
 }
