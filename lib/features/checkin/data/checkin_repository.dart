@@ -49,15 +49,17 @@ class CheckinRepository {
     final now = DateTime.now().toUtc();
     final objectPath = _buildObjectPath(user.id, now);
 
-    await _requireClient.storage.from(MediaStorage.checkinBucket).uploadBinary(
-      objectPath,
-      compressed,
-      fileOptions: const FileOptions(
-        contentType: 'image/jpeg',
-        cacheControl: '3600',
-        upsert: false,
-      ),
-    );
+    await _requireClient.storage
+        .from(MediaStorage.checkinBucket)
+        .uploadBinary(
+          objectPath,
+          compressed,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            cacheControl: '3600',
+            upsert: false,
+          ),
+        );
 
     await _requireClient.from('checkins').insert(<String, dynamic>{
       'user_id': user.id,

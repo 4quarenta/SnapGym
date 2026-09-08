@@ -30,25 +30,27 @@ class FeedRepository {
         .order('created_at', ascending: false)
         .limit(30);
 
-    return Future.wait(rows.map((row) async {
-      final profile = row['profiles'] as Map<String, dynamic>?;
-      final photoPath = row['photo_path'] as String;
-      final signedUrl = await _requireClient.storage
-          .from(MediaStorage.checkinBucket)
-          .createSignedUrl(photoPath, 3600);
+    return Future.wait(
+      rows.map((row) async {
+        final profile = row['profiles'] as Map<String, dynamic>?;
+        final photoPath = row['photo_path'] as String;
+        final signedUrl = await _requireClient.storage
+            .from(MediaStorage.checkinBucket)
+            .createSignedUrl(photoPath, 3600);
 
-      return FeedCheckin(
-        id: row['id'] as String,
-        userId: row['user_id'] as String,
-        workoutType: WorkoutType.fromDb(row['workout_type'] as String),
-        durationMinutes: row['duration_minutes'] as int,
-        note: row['note'] as String?,
-        photoUrl: signedUrl,
-        performedAt: DateTime.parse(row['performed_at'] as String).toLocal(),
-        username: profile?['username'] as String?,
-        displayName: profile?['display_name'] as String?,
-      );
-    }));
+        return FeedCheckin(
+          id: row['id'] as String,
+          userId: row['user_id'] as String,
+          workoutType: WorkoutType.fromDb(row['workout_type'] as String),
+          durationMinutes: row['duration_minutes'] as int,
+          note: row['note'] as String?,
+          photoUrl: signedUrl,
+          performedAt: DateTime.parse(row['performed_at'] as String).toLocal(),
+          username: profile?['username'] as String?,
+          displayName: profile?['display_name'] as String?,
+        );
+      }),
+    );
   }
 
   SupabaseClient get _requireClient {

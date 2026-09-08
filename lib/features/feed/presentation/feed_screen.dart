@@ -248,9 +248,9 @@ class _EmptyFeed extends StatelessWidget {
             const SizedBox(height: SgSpacing.md),
             Text(
               'Ainda não há check-ins.',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xs),
             const Text(
@@ -289,7 +289,10 @@ class _FeedError extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: SgSpacing.md),
-            OutlinedButton(onPressed: onRetry, child: const Text('Tentar novamente')),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text('Tentar novamente'),
+            ),
           ],
         ),
       ),

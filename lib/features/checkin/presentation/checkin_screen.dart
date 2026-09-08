@@ -57,7 +57,8 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Não foi possível abrir a câmera. Verifique a permissão do app.';
+          _error =
+              'Não foi possível abrir a câmera. Verifique a permissão do app.';
         });
       }
     }
@@ -81,7 +82,9 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
     });
 
     try {
-      await ref.read(checkinRepositoryProvider).createCheckin(
+      await ref
+          .read(checkinRepositoryProvider)
+          .createCheckin(
             sourceImagePath: _photo!.path,
             workoutType: _workoutType,
             durationMinutes: int.parse(_durationController.text.trim()),
@@ -89,9 +92,9 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
           );
       ref.invalidate(feedCheckinsProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Check-in publicado.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Check-in publicado.')));
       context.go('/feed');
     } catch (error) {
       if (mounted) {
@@ -260,17 +263,17 @@ class _EmptyPhoto extends StatelessWidget {
             const SizedBox(height: SgSpacing.md),
             Text(
               'Tirar foto do treino',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xs),
             Text(
               'A galeria não é usada nesta fase: a evidência deve ser capturada no momento do check-in.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: SgColors.darkTextSecondary,
-                  ),
+                color: SgColors.darkTextSecondary,
+              ),
             ),
           ],
         ),
