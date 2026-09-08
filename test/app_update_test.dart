@@ -22,7 +22,7 @@ void main() {
       'build_number': 7,
       'download_url': 'https://example.test/snapgym.apk',
       'action_url': null,
-      'sha256': 'a' * 64,
+      'sha256': List<String>.filled(64, 'a').join(),
       'release_notes': 'Teste',
       'is_mandatory': false,
       'published_at': '2026-09-08T22:00:00Z',
