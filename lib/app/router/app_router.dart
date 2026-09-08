@@ -1,17 +1,61 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/application/auth_router_notifier.dart';
+import '../../features/auth/presentation/backend_configuration_screen.dart';
+import '../../features/auth/presentation/check_email_screen.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/checkin/presentation/checkin_placeholder_screen.dart';
 import '../../features/explore/presentation/explore_placeholder_screen.dart';
 import '../../features/feed/presentation/feed_placeholder_screen.dart';
-import '../../features/profile/presentation/profile_placeholder_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/ranking/presentation/ranking_placeholder_screen.dart';
 import 'scaffold_with_navigation.dart';
 
-final appRouterProvider = Provider<GoRouter>(
-  (ref) => GoRouter(
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final auth = ref.watch(authRouterNotifierProvider);
+
+  return GoRouter(
     initialLocation: '/feed',
+    refreshListenable: auth,
+    redirect: (context, state) {
+      final location = state.matchedLocation;
+      final isAuthRoute = location.startsWith('/auth/');
+
+      if (!auth.isConfigured) {
+        return location == '/configuration' ? null : '/configuration';
+      }
+
+      if (!auth.isSignedIn) {
+        return isAuthRoute ? null : '/auth/login';
+      }
+
+      if (isAuthRoute || location == '/configuration') {
+        return '/feed';
+      }
+
+      return null;
+    },
     routes: <RouteBase>[
+      GoRoute(
+        path: '/configuration',
+        builder: (context, state) => const BackendConfigurationScreen(),
+      ),
+      GoRoute(
+        path: '/auth/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/auth/signup',
+        builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/auth/check-email',
+        builder: (context, state) => CheckEmailScreen(
+          email: state.uri.queryParameters['email'],
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavigation(navigationShell: navigationShell);
@@ -53,12 +97,12 @@ final appRouterProvider = Provider<GoRouter>(
             routes: <RouteBase>[
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const ProfilePlaceholderScreen(),
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),
         ],
       ),
     ],
-  ),
-);
+  );
+});
