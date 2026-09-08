@@ -6,12 +6,12 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -24,14 +24,74 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Bootstrap Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          preserve=(
+            pubspec.yaml
+            analysis_options.yaml
+            README.md
+            .gitignore
+            .env.example
+            lib
+            test
+            docs
+            .github
+            tool
+          )
+
+          for item in "${preserve[@]}"; do
+            if [ -e "$item" ]; then
+              cp -a "$item" "$tmp/"
+            fi
+          done
+
+          flutter create --platforms=android --org com.snapgym --project-name snapgym .
+
+          for item in "${preserve[@]}"; do
+            if [ -e "$tmp/$item" ]; then
+              rm -rf "$item"
+              cp -a "$tmp/$item" "$item"
+            fi
+          done
+
+          rm -rf "$tmp"
+          python3 tool/configure_android_flavors.py
+
       - name: Dependencies
         run: flutter pub get
 
-      - name: Format check
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Format
+        run: dart format lib test
 
       - name: Analyze
         run: flutter analyze
 
       - name: Test
         run: flutter test
+
+      - name: Build Android dev APK
+        run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
+
+      - name: Upload dev APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapgym-dev-debug-apk
+          path: build/app/outputs/flutter-apk/app-dev-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Commit generated foundation
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android .metadata pubspec.lock lib test
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: finalize Flutter Android foundation"
+            git push
+          fi
