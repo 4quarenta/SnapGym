@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class ScaffoldWithNavigation extends StatelessWidget {
   const ScaffoldWithNavigation({
@@ -24,38 +24,28 @@ class ScaffoldWithNavigation extends StatelessWidget {
         },
         destinations: <NavigationDestination>[
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.house()),
-            selectedIcon: PhosphorIcon(
-              PhosphorIcons.house(PhosphorIconsStyle.fill),
-            ),
+            icon: PhosphorIcon(PhosphorIconsRegular.house),
+            selectedIcon: PhosphorIcon(PhosphorIconsFill.house),
             label: 'Início',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.compass()),
-            selectedIcon: PhosphorIcon(
-              PhosphorIcons.compass(PhosphorIconsStyle.fill),
-            ),
+            icon: PhosphorIcon(PhosphorIconsRegular.compass),
+            selectedIcon: PhosphorIcon(PhosphorIconsFill.compass),
             label: 'Explorar',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.camera()),
-            selectedIcon: PhosphorIcon(
-              PhosphorIcons.camera(PhosphorIconsStyle.fill),
-            ),
+            icon: PhosphorIcon(PhosphorIconsRegular.camera),
+            selectedIcon: PhosphorIcon(PhosphorIconsFill.camera),
             label: 'Check-in',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.chartBar()),
-            selectedIcon: PhosphorIcon(
-              PhosphorIcons.chartBar(PhosphorIconsStyle.fill),
-            ),
+            icon: PhosphorIcon(PhosphorIconsRegular.chartBar),
+            selectedIcon: PhosphorIcon(PhosphorIconsFill.chartBar),
             label: 'Ranking',
           ),
           NavigationDestination(
-            icon: PhosphorIcon(PhosphorIcons.user()),
-            selectedIcon: PhosphorIcon(
-              PhosphorIcons.user(PhosphorIconsStyle.fill),
-            ),
+            icon: PhosphorIcon(PhosphorIconsRegular.user),
+            selectedIcon: PhosphorIcon(PhosphorIconsFill.user),
             label: 'Perfil',
           ),
         ],
