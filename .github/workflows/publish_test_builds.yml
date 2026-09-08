@@ -36,16 +36,19 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Decode stable dev signing key
+        run: base64 --decode android/app/dev-signing.jks.b64 > android/app/dev-signing.jks
+
       - name: Dependencies
         run: flutter pub get
 
-      - name: Build dev APK
+      - name: Build dev release APK
         run: >-
-          flutter build apk --debug --flavor dev -t lib/main_dev.dart
+          flutter build apk --release --flavor dev -t lib/main_dev.dart
           --dart-define-from-file=config/dev.json
 
       - name: Prepare APK
-        run: cp build/app/outputs/flutter-apk/app-dev-debug.apk SnapGym-Android-dev.apk
+        run: cp build/app/outputs/flutter-apk/app-dev-release.apk SnapGym-Android-dev.apk
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
@@ -138,6 +141,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read app version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          FULL_VERSION="$(awk '/^version:/ {print $2}' pubspec.yaml)"
+          VERSION_NAME="${FULL_VERSION%%+*}"
+          BUILD_NUMBER="${FULL_VERSION##*+}"
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
       - name: Download Android build
         uses: actions/download-artifact@v4
         with:
@@ -151,39 +165,40 @@ jobs:
           path: release-assets
 
       - name: Create release notes
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build }}
         run: |
-          cat > RELEASE_NOTES.md <<'EOF'
-          ## SnapGym — Test Build v0.3.0
-
-          Primeira vertical funcional de treino social do SnapGym.
+          cat > RELEASE_NOTES.md <<EOF
+          ## SnapGym — Test Build v${VERSION_NAME} (${BUILD_NUMBER})
 
           ### Incluído
-          - captura de foto diretamente pela câmera
-          - compressão da evidência antes do upload
-          - bucket privado de mídia no Supabase de desenvolvimento
-          - check-in obrigatório com tipo de treino e duração
-          - observação opcional de até 280 caracteres
-          - persistência com RLS e vínculo ao usuário autenticado
-          - feed autenticado com fotos por URL assinada
-          - evidência sem permissão de exclusão pelo cliente
+          - verificação automática de versão ao abrir o aplicativo
+          - aviso quando uma versão mais recente está disponível
+          - download do APK dentro do próprio SnapGym no Android
+          - verificação SHA-256 preparada para o catálogo de updates
+          - abertura do instalador oficial do Android após o download
+          - chave de assinatura estável exclusiva do flavor DEV, permitindo atualizar o APK sem reinstalar nas próximas versões
+          - permissões de sideload restritas ao flavor DEV
 
           ### Android
-          **`SnapGym-Android-dev.apk`** pode ser instalado diretamente em um aparelho Android com instalação de fontes externas habilitada.
+          **SnapGym-Android-dev.apk** é um APK release de desenvolvimento e pode ser instalado em aparelho real.
+
+          Na primeira instalação desta nova linha de assinatura, remova builds antigos do SnapGym DEV. Depois disso, versões futuras assinadas com a mesma chave poderão atualizar a instalação existente.
 
           ### iOS
-          **`SnapGym-iOS-Simulator-dev.app.zip`** é um build para o iOS Simulator e não pode ser instalado diretamente em um iPhone físico.
-
-          O Supabase Storage desta build é provisório para desenvolvimento. A camada de dados foi mantida separada para permitir migração futura de mídia para R2/VPS sem reescrever a interface.
+          **SnapGym-iOS-Simulator-dev.app.zip** permanece destinado ao iOS Simulator. Em aparelhos reais, updates futuros serão direcionados por TestFlight/App Store, conforme as regras da Apple.
           EOF
 
       - name: Publish or update GitHub pre-release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION_NAME: ${{ steps.version.outputs.name }}
         shell: bash
         run: |
           set -euo pipefail
-          TAG="test-v0.3.0"
-          TITLE="SnapGym Test Build v0.3.0"
+          TAG="test-v${VERSION_NAME}"
+          TITLE="SnapGym Test Build v${VERSION_NAME}"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" \
