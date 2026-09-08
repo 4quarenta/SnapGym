@@ -39,6 +39,8 @@ jobs:
             lib
             test
             docs
+            config
+            supabase
             .github
             tool
           )
@@ -75,7 +77,7 @@ jobs:
       - name: Test
         run: flutter test
 
-      - name: Persist generated Android foundation
+      - name: Persist generated Flutter files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
@@ -84,13 +86,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add android .metadata pubspec.lock lib test
           if ! git diff --cached --quiet; then
-            git commit -m "chore: finalize Flutter Android foundation"
+            git commit -m "chore: normalize generated Flutter files"
             git push
           fi
 
       - name: Build Android dev APK
         timeout-minutes: 12
-        run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
+        run: >-
+          flutter build apk --debug --flavor dev -t lib/main_dev.dart
+          --dart-define-from-file=config/dev.json
 
       - name: Upload dev APK
         uses: actions/upload-artifact@v4
