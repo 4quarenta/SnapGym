@@ -31,17 +31,17 @@ class BackendConfigurationScreen extends StatelessWidget {
                     'Backend não configurado',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: SgSpacing.sm),
                   Text(
                     'Este build precisa de SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY. Builds de teste oficiais já recebem essas configurações automaticamente.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          height: 1.45,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.45,
+                    ),
                   ),
                 ],
               ),

@@ -37,7 +37,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     setState(() => _loading = true);
     try {
-      final response = await ref.read(authRepositoryProvider).signUp(
+      final response = await ref
+          .read(authRepositoryProvider)
+          .signUp(
             email: _emailController.text,
             password: _passwordController.text,
           );
@@ -52,9 +54,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authErrorMessage(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -65,7 +67,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     return AuthFormScaffold(
       title: 'Crie sua conta',
-      subtitle: 'A identidade social do perfil será configurada depois do primeiro acesso.',
+      subtitle:
+          'A identidade social do perfil será configurada depois do primeiro acesso.',
       children: <Widget>[
         Form(
           key: _formKey,
@@ -96,9 +99,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   helperText: 'Mínimo de 8 caracteres',
                   prefixIcon: const Icon(Icons.lock_outline_rounded),
                   suffixIcon: IconButton(
-                    onPressed: () => setState(
-                      () => _obscurePassword = !_obscurePassword,
-                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined

@@ -29,9 +29,9 @@ class ProfileScreen extends ConsumerWidget {
           children: <Widget>[
             Text(
               'Perfil',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xl),
             profile.when(
@@ -72,7 +72,9 @@ class _ProfileContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final displayName = profile.displayName ?? 'Complete seu perfil';
-    final username = profile.username == null ? '@usuario' : '@${profile.username}';
+    final username = profile.username == null
+        ? '@usuario'
+        : '@${profile.username}';
     final initial = profile.displayName?.trim().isNotEmpty == true
         ? profile.displayName!.trim().characters.first.toUpperCase()
         : 'S';
@@ -89,26 +91,26 @@ class _ProfileContent extends ConsumerWidget {
               child: Text(
                 initial,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: SgColors.jet,
-                    ),
+                  fontWeight: FontWeight.w900,
+                  color: SgColors.jet,
+                ),
               ),
             ),
             const SizedBox(height: SgSpacing.md),
             Text(
               displayName,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xxs),
             Text(
               username,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: SgColors.moonstone,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: SgColors.moonstone,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             if (profile.bio != null) ...<Widget>[
               const SizedBox(height: SgSpacing.md),
@@ -123,8 +125,8 @@ class _ProfileContent extends ConsumerWidget {
               Text(
                 email!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
             const SizedBox(height: SgSpacing.xl),
@@ -141,7 +143,9 @@ class _ProfileContent extends ConsumerWidget {
                 }
               },
               icon: const Icon(Icons.edit_outlined),
-              label: Text(profile.isConfigured ? 'Editar perfil' : 'Configurar perfil'),
+              label: Text(
+                profile.isConfigured ? 'Editar perfil' : 'Configurar perfil',
+              ),
             ),
           ],
         ),
@@ -169,8 +173,12 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   @override
   void initState() {
     super.initState();
-    _usernameController = TextEditingController(text: widget.profile.username ?? '');
-    _displayNameController = TextEditingController(text: widget.profile.displayName ?? '');
+    _usernameController = TextEditingController(
+      text: widget.profile.username ?? '',
+    );
+    _displayNameController = TextEditingController(
+      text: widget.profile.displayName ?? '',
+    );
     _bioController = TextEditingController(text: widget.profile.bio ?? '');
   }
 
@@ -187,7 +195,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     setState(() => _saving = true);
 
     try {
-      await ref.read(profileRepositoryProvider).updateOwnProfile(
+      await ref
+          .read(profileRepositoryProvider)
+          .updateOwnProfile(
             username: _usernameController.text,
             displayName: _displayNameController.text,
             bio: _bioController.text,
@@ -199,7 +209,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       if (error is PostgrestException && error.code == '23505') {
         message = 'Esse nome de usuário já está em uso.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -223,8 +235,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
               Text(
                 'Seu perfil',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: SgSpacing.xl),
               TextFormField(
@@ -235,13 +247,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 decoration: const InputDecoration(
                   labelText: 'Nome de usuário',
                   prefixText: '@',
-                  helperText: '3–24 caracteres; letras, números, ponto e underline',
+                  helperText:
+                      '3–24 caracteres; letras, números, ponto e underline',
                 ),
               ),
               const SizedBox(height: SgSpacing.md),
               TextFormField(
                 controller: _displayNameController,
-                validator: (value) => ProfileValidation.displayName(value ?? ''),
+                validator: (value) =>
+                    ProfileValidation.displayName(value ?? ''),
                 decoration: const InputDecoration(labelText: 'Nome exibido'),
               ),
               const SizedBox(height: SgSpacing.md),
@@ -293,7 +307,10 @@ class _ProfileError extends StatelessWidget {
           children: <Widget>[
             const Text('Não foi possível carregar seu perfil.'),
             const SizedBox(height: SgSpacing.md),
-            TextButton(onPressed: onRetry, child: const Text('Tentar novamente')),
+            TextButton(
+              onPressed: onRetry,
+              child: const Text('Tentar novamente'),
+            ),
           ],
         ),
       ),

@@ -52,9 +52,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/auth/check-email',
-        builder: (context, state) => CheckEmailScreen(
-          email: state.uri.queryParameters['email'],
-        ),
+        builder: (context, state) =>
+            CheckEmailScreen(email: state.uri.queryParameters['email']),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

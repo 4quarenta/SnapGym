@@ -18,7 +18,8 @@ class AuthRepository {
 
   User? get currentUser => _client?.auth.currentUser;
 
-  Stream<AuthState> get authStateChanges => _requireClient.auth.onAuthStateChange;
+  Stream<AuthState> get authStateChanges =>
+      _requireClient.auth.onAuthStateChange;
 
   Future<AuthResponse> signIn({
     required String email,
@@ -34,10 +35,7 @@ class AuthRepository {
     required String email,
     required String password,
   }) {
-    return _requireClient.auth.signUp(
-      email: email.trim(),
-      password: password,
-    );
+    return _requireClient.auth.signUp(email: email.trim(), password: password);
   }
 
   Future<void> signOut() => _requireClient.auth.signOut();

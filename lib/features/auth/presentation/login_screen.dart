@@ -35,16 +35,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _loading = true);
     try {
-      await ref.read(authRepositoryProvider).signIn(
+      await ref
+          .read(authRepositoryProvider)
+          .signIn(
             email: _emailController.text,
             password: _passwordController.text,
           );
       if (mounted) context.go('/feed');
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authErrorMessage(error))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -55,7 +57,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return AuthFormScaffold(
       title: 'Entre no SnapGym',
-      subtitle: 'Registre seus treinos, mantenha a sequência e dispute posições.',
+      subtitle:
+          'Registre seus treinos, mantenha a sequência e dispute posições.',
       children: <Widget>[
         Form(
           key: _formKey,
@@ -86,9 +89,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   labelText: 'Senha',
                   prefixIcon: const Icon(Icons.lock_outline_rounded),
                   suffixIcon: IconButton(
-                    onPressed: () => setState(
-                      () => _obscurePassword = !_obscurePassword,
-                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined
