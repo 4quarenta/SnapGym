@@ -27,7 +27,7 @@ class FeedRepository {
   final SupabaseClient? _client;
 
   Future<List<FeedCheckin>> fetchLatest() async {
-    final dynamic response = await _requireClient.rpc(
+    final response = await _requireClient.rpc<List<dynamic>>(
       'get_social_feed',
       params: <String, dynamic>{'p_limit': 30, 'p_offset': 0},
     );
@@ -35,7 +35,7 @@ class FeedRepository {
   }
 
   Future<List<FeedCheckin>> fetchByUser(String userId) async {
-    final dynamic response = await _requireClient.rpc(
+    final response = await _requireClient.rpc<List<dynamic>>(
       'get_profile_checkins',
       params: <String, dynamic>{
         'p_user_id': userId,
@@ -72,10 +72,10 @@ class FeedRepository {
     );
   }
 
-  List<Map<String, dynamic>> _rows(dynamic response) {
-    if (response is! List) return const <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _rows(Object? response) {
+    if (response is! List<dynamic>) return const <Map<String, dynamic>>[];
     return response
-        .whereType<Map>()
+        .whereType<Map<String, dynamic>>()
         .map((row) => Map<String, dynamic>.from(row))
         .toList();
   }
