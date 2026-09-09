@@ -19,6 +19,7 @@ final streakProvider = FutureProvider.autoDispose<StreakSummary>((ref) {
 
 class RankingRepository {
   const RankingRepository(this._client);
+
   final SupabaseClient? _client;
 
   Future<List<RankingEntry>> weekly({String scope = 'following'}) async {
@@ -39,7 +40,9 @@ class RankingRepository {
   }
 
   List<Map<String, dynamic>> _rows(Object? response) {
-    if (response is! List<dynamic>) return const <Map<String, dynamic>>[];
+    if (response is! List<dynamic>) {
+      return const <Map<String, dynamic>>[];
+    }
     return response
         .whereType<Map<String, dynamic>>()
         .map((row) => Map<String, dynamic>.from(row))
@@ -48,7 +51,9 @@ class RankingRepository {
 
   SupabaseClient get _requireClient {
     final client = _client;
-    if (client == null) throw StateError('Supabase is not configured for this build.');
+    if (client == null) {
+      throw StateError('Supabase is not configured for this build.');
+    }
     return client;
   }
 }
