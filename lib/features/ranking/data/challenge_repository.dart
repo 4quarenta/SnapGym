@@ -72,24 +72,14 @@ class ChallengeRepository {
     required DateTime endsOn,
     required int targetDays,
   }) async {
-    final userId = _requireUserId;
-    final row = await _requireClient
-        .from('challenges')
-        .insert(<String, dynamic>{
-          'creator_id': userId,
-          'title': title.trim(),
-          'description': description.trim(),
-          'starts_on': _date(startsOn),
-          'ends_on': _date(endsOn),
-          'target_days': targetDays,
-        })
-        .select('id')
-        .single();
-
-    await _requireClient.from('challenge_participants').insert(
-      <String, dynamic>{
-        'challenge_id': row['id'] as String,
-        'user_id': userId,
+    await _requireClient.rpc<Object?>(
+      'create_challenge',
+      params: <String, dynamic>{
+        'p_title': title.trim(),
+        'p_description': description.trim(),
+        'p_starts_on': _date(startsOn),
+        'p_ends_on': _date(endsOn),
+        'p_target_days': targetDays,
       },
     );
   }
