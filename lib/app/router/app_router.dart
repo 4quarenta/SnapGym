@@ -7,9 +7,10 @@ import '../../features/auth/presentation/check_email_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/checkin/presentation/checkin_screen.dart';
-import '../../features/explore/presentation/explore_placeholder_screen.dart';
+import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/public_profile_screen.dart';
 import '../../features/ranking/presentation/ranking_placeholder_screen.dart';
 import 'scaffold_with_navigation.dart';
 
@@ -55,6 +56,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             CheckEmailScreen(email: state.uri.queryParameters['email']),
       ),
+      GoRoute(
+        path: '/users/:userId',
+        builder: (context, state) => PublicProfileScreen(
+          userId: state.pathParameters['userId']!,
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavigation(navigationShell: navigationShell);
@@ -72,7 +79,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: <RouteBase>[
               GoRoute(
                 path: '/explore',
-                builder: (context, state) => const ExplorePlaceholderScreen(),
+                builder: (context, state) => const ExploreScreen(),
               ),
             ],
           ),
