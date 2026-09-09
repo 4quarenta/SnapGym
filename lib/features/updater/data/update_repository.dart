@@ -83,22 +83,44 @@ class UpdateRepository {
     final apk = File(
       '${updatesDirectory.path}/snapgym-${update.versionName}-${update.buildNumber}.apk',
     );
+    final isGzip = Uri.tryParse(downloadUrl)?.path.toLowerCase().endsWith('.gz') == true;
+    final compressed = File('${apk.path}.gz');
 
     final canReuse = await _isValidExistingFile(apk, update.sha256);
     if (!canReuse) {
-      if (await apk.exists()) await apk.delete();
+      await _deleteIfExists(apk);
+      await _deleteIfExists(compressed);
 
-      await _dio.download(
-        downloadUrl,
-        apk.path,
-        deleteOnError: true,
-        onReceiveProgress: (received, total) {
-          if (total > 0) onProgress(received / total);
-        },
-      );
+      try {
+        final target = isGzip ? compressed : apk;
+        final downloadScale = isGzip ? 0.90 : 1.0;
 
-      await _verifySha256(apk, update.sha256);
+        await _dio.download(
+          downloadUrl,
+          target.path,
+          deleteOnError: true,
+          onReceiveProgress: (received, total) {
+            if (total > 0) {
+              onProgress((received / total) * downloadScale);
+            }
+          },
+        );
+
+        if (isGzip) {
+          await _decompressGzip(compressed, apk);
+          onProgress(0.95);
+          await _deleteIfExists(compressed);
+        }
+
+        await _verifySha256(apk, update.sha256);
+        onProgress(1);
+      } catch (_) {
+        await _deleteIfExists(apk);
+        await _deleteIfExists(compressed);
+        rethrow;
+      }
     } else {
+      await _deleteIfExists(compressed);
       onProgress(1);
     }
 
@@ -116,6 +138,18 @@ class UpdateRepository {
     return UpdateInstallResult.started;
   }
 
+  Future<void> _decompressGzip(File compressed, File destination) async {
+    final sink = destination.openWrite();
+    try {
+      await sink.addStream(gzip.decoder.bind(compressed.openRead()));
+      await sink.flush();
+    } on FormatException {
+      throw StateError('O pacote da atualização está corrompido.');
+    } finally {
+      await sink.close();
+    }
+  }
+
   Future<bool> _isValidExistingFile(File file, String? expectedSha256) async {
     if (!await file.exists()) return false;
     if (expectedSha256 == null || expectedSha256.isEmpty) return true;
@@ -129,11 +163,15 @@ class UpdateRepository {
 
     final digest = await sha256.bind(file.openRead()).first;
     if (digest.toString() != expectedSha256) {
-      await file.delete();
+      await _deleteIfExists(file);
       throw StateError(
         'A atualização baixada falhou na verificação de integridade.',
       );
     }
+  }
+
+  Future<void> _deleteIfExists(File file) async {
+    if (await file.exists()) await file.delete();
   }
 
   String? get _platformName {
