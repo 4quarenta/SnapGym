@@ -35,7 +35,7 @@ class SocialRepository {
   final AuthRepository _authRepository;
 
   Future<List<SocialProfile>> searchProfiles(String query) async {
-    final dynamic response = await _requireClient.rpc(
+    final response = await _requireClient.rpc<List<dynamic>>(
       'search_social_profiles',
       params: <String, dynamic>{
         'p_query': query.trim(),
@@ -46,7 +46,7 @@ class SocialRepository {
   }
 
   Future<SocialProfile?> fetchProfile(String userId) async {
-    final dynamic response = await _requireClient.rpc(
+    final response = await _requireClient.rpc<List<dynamic>>(
       'get_social_profile',
       params: <String, dynamic>{'p_user_id': userId},
     );
@@ -133,10 +133,10 @@ class SocialRepository {
         .eq('user_id', _requireUserId);
   }
 
-  List<Map<String, dynamic>> _rows(dynamic response) {
-    if (response is! List) return const <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _rows(Object? response) {
+    if (response is! List<dynamic>) return const <Map<String, dynamic>>[];
     return response
-        .whereType<Map>()
+        .whereType<Map<String, dynamic>>()
         .map((row) => Map<String, dynamic>.from(row))
         .toList();
   }
