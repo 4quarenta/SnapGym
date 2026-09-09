@@ -80,6 +80,14 @@ jobs:
       - name: Test
         run: flutter test
 
+      - name: Upload UI previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapgym-ui-previews
+          path: build/previews/*.png
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Persist generated Flutter files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
