@@ -182,12 +182,12 @@ jobs:
           - curtidas em check-ins
           - comentários e exclusão do próprio comentário
           - histórico de check-ins nos perfis
-          - sistema de atualização Android mantido e corrigido
+          - sistema de atualização Android com pacote comprimido e validação SHA-256 do APK final
 
           ### Android
           **SnapGym-Android-dev.apk** é um APK release de desenvolvimento e pode ser instalado em aparelho real.
 
-          Builds da linha DEV usam a mesma assinatura, permitindo atualização sobre a instalação existente.
+          Builds da linha DEV usam a mesma assinatura, permitindo atualização sobre a instalação existente. O updater interno baixa o pacote comprimido, descompacta no aparelho, valida o SHA-256 do APK e então abre o instalador do Android.
 
           ### iOS
           **SnapGym-iOS-Simulator-dev.app.zip** é destinado ao iOS Simulator. Em aparelhos reais, a distribuição futura será feita por TestFlight/App Store.
@@ -203,8 +203,20 @@ jobs:
           set -euo pipefail
 
           APK="$GITHUB_WORKSPACE/release-assets/SnapGym-Android-dev.apk"
+          COMPRESSED_APK="$RUNNER_TEMP/SnapGym-Android-dev.apk.gz"
           APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
           UPDATE_NOTES="Atualização ${VERSION_NAME}: recursos sociais, perfis, seguir atletas, curtidas, comentários e melhorias da versão de teste."
+
+          gzip -9 -c "$APK" > "$COMPRESSED_APK"
+          COMPRESSED_BYTES="$(stat -c%s "$COMPRESSED_APK")"
+          echo "Updater package size: ${COMPRESSED_BYTES} bytes"
+
+          # Supabase Free has a 50 MB global Storage upload ceiling. Keep a
+          # safety margin so the publisher fails explicitly before network I/O.
+          if [ "$COMPRESSED_BYTES" -ge 49000000 ]; then
+            echo "Compressed updater package exceeds the safe Free Storage limit."
+            exit 1
+          fi
 
           get_oidc_token() {
             curl --fail-with-body --silent --show-error \
@@ -233,17 +245,13 @@ jobs:
             exit 1
           fi
 
-          echo "Uploading updater APK through short-lived signed URL..."
-          curl --fail-with-body --show-error \
-            --retry 3 \
-            --retry-delay 2 \
-            --retry-all-errors \
+          echo "Uploading compressed updater package through short-lived signed URL..."
+          curl --fail-with-body --silent --show-error \
             -X PUT "$SIGNED_URL" \
-            -H "Content-Type: application/vnd.android.package-archive" \
+            -H "Content-Type: application/octet-stream" \
             -H "Cache-Control: max-age=3600" \
-            -H "x-upsert: true" \
-            --upload-file "$APK" \
-            --output /dev/null
+            --upload-file "$COMPRESSED_APK" \
+            --output "$RUNNER_TEMP/updater-upload-response.json"
 
           OIDC_TOKEN="$(get_oidc_token)"
           FINALIZE_BODY="$(jq -n \
