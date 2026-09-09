@@ -69,7 +69,7 @@ function validateMetadata(data: PublishRequest) {
     throw new Error("Release notes are too long.");
   }
 
-  const objectPath = `dev/android/${version}-${build}.apk`;
+  const objectPath = `dev/android/${version}-${build}.apk.gz`;
   return { version, build: build as number, sha256, releaseNotes, objectPath };
 }
 
@@ -117,8 +117,8 @@ Deno.serve(async (req: Request) => {
         .list("dev/android", { search: fileName, limit: 10 });
 
       if (listError || !objects?.some((item) => item.name === fileName)) {
-        console.error("published APK not found", listError);
-        return json({ error: "Uploaded APK was not found." }, 409);
+        console.error("published update package not found", listError);
+        return json({ error: "Uploaded update package was not found." }, 409);
       }
 
       const downloadUrl =
