@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/sg_spacing.dart';
 import '../../../core/ui/sg_brand.dart';
+import '../data/challenge_repository.dart';
 import '../data/ranking_repository.dart';
 import '../domain/ranking_entry.dart';
+import 'challenges_section.dart';
 
 class RankingPlaceholderScreen extends ConsumerStatefulWidget {
   const RankingPlaceholderScreen({super.key});
@@ -14,17 +16,17 @@ class RankingPlaceholderScreen extends ConsumerStatefulWidget {
 }
 
 class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
-  String scope = 'following';
+  String _section = 'ranking';
+  String _scope = 'following';
 
   @override
   Widget build(BuildContext context) {
-    final ranking = ref.watch(weeklyRankingProvider(scope));
-    final streak = ref.watch(streakProvider);
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(weeklyRankingProvider(scope));
+          ref.invalidate(weeklyRankingProvider(_scope));
           ref.invalidate(streakProvider);
+          ref.invalidate(activeChallengesProvider);
         },
         child: ListView(
           padding: const EdgeInsets.all(SgSpacing.lg),
@@ -38,98 +40,131 @@ class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
               ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: SgSpacing.xs),
-            const Text('Consistência vence. Cada dia treinado conta uma vez.'),
-            const SizedBox(height: SgSpacing.lg),
-            streak.when(
-              data: (value) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(SgSpacing.md),
-                  child: Row(
-                    children: <Widget>[
-                      const Icon(Icons.local_fire_department_rounded, size: 34),
-                      const SizedBox(width: SgSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              '${value.current} dias',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
-                            Text('Sequência atual · recorde ${value.best} dias'),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        value.trainedToday
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              loading: () => const LinearProgressIndicator(),
-              error: (_, _) =>
-                  const Text('Não foi possível carregar sua sequência.'),
-            ),
+            const Text('Consistência, disputa e progresso comprovado.'),
             const SizedBox(height: SgSpacing.lg),
             SegmentedButton<String>(
               segments: const <ButtonSegment<String>>[
                 ButtonSegment(
-                  value: 'following',
-                  label: Text('Seguindo'),
-                  icon: Icon(Icons.people_alt_outlined),
+                  value: 'ranking',
+                  label: Text('Ranking'),
+                  icon: Icon(Icons.leaderboard_outlined),
                 ),
                 ButtonSegment(
-                  value: 'global',
-                  label: Text('Global'),
-                  icon: Icon(Icons.public),
+                  value: 'challenges',
+                  label: Text('Desafios'),
+                  icon: Icon(Icons.emoji_events_outlined),
                 ),
               ],
-              selected: <String>{scope},
+              selected: <String>{_section},
               onSelectionChanged: (value) {
-                setState(() => scope = value.first);
+                setState(() => _section = value.first);
               },
             ),
             const SizedBox(height: SgSpacing.lg),
-            Text(
-              'Esta semana',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: SgSpacing.sm),
-            ranking.when(
-              data: (entries) => entries.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: Text(
-                          'Ainda não há treinos no ranking desta semana.',
-                        ),
-                      ),
-                    )
-                  : Column(
-                      children: entries
-                          .map((entry) => _RankingTile(entry: entry))
-                          .toList(),
-                    ),
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-              error: (_, _) => const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('Não foi possível carregar o ranking.'),
-              ),
-            ),
+            if (_section == 'ranking') _buildRanking(context) else const ChallengesSection(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRanking(BuildContext context) {
+    final ranking = ref.watch(weeklyRankingProvider(_scope));
+    final streak = ref.watch(streakProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        streak.when(
+          data: (value) => Card(
+            child: Padding(
+              padding: const EdgeInsets.all(SgSpacing.md),
+              child: Row(
+                children: <Widget>[
+                  const Icon(Icons.local_fire_department_rounded, size: 34),
+                  const SizedBox(width: SgSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          '${value.current} dias',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        Text('Sequência atual · recorde ${value.best} dias'),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    value.trainedToday
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          loading: () => const LinearProgressIndicator(),
+          error: (_, _) =>
+              const Text('Não foi possível carregar sua sequência.'),
+        ),
+        const SizedBox(height: SgSpacing.lg),
+        SegmentedButton<String>(
+          segments: const <ButtonSegment<String>>[
+            ButtonSegment(
+              value: 'following',
+              label: Text('Seguindo'),
+              icon: Icon(Icons.people_alt_outlined),
+            ),
+            ButtonSegment(
+              value: 'global',
+              label: Text('Global'),
+              icon: Icon(Icons.public),
+            ),
+          ],
+          selected: <String>{_scope},
+          onSelectionChanged: (value) {
+            setState(() => _scope = value.first);
+          },
+        ),
+        const SizedBox(height: SgSpacing.lg),
+        Text(
+          'Esta semana',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: SgSpacing.xs),
+        const Text('Dias ativos definem a posição. Check-ins e minutos desempatatam.'),
+        const SizedBox(height: SgSpacing.sm),
+        ranking.when(
+          data: (entries) => entries.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text(
+                      'Ainda não há treinos no ranking desta semana.',
+                    ),
+                  ),
+                )
+              : Column(
+                  children: entries
+                      .map((entry) => _RankingTile(entry: entry))
+                      .toList(),
+                ),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+          error: (_, _) => const Padding(
+            padding: EdgeInsets.all(24),
+            child: Text('Não foi possível carregar o ranking.'),
+          ),
+        ),
+      ],
     );
   }
 }
