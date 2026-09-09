@@ -11,6 +11,9 @@ class FeedCheckin {
     required this.performedAt,
     required this.username,
     required this.displayName,
+    required this.likeCount,
+    required this.commentCount,
+    required this.likedByMe,
   });
 
   final String id;
@@ -22,6 +25,9 @@ class FeedCheckin {
   final DateTime performedAt;
   final String? username;
   final String? displayName;
+  final int likeCount;
+  final int commentCount;
+  final bool likedByMe;
 
   String get authorName {
     final name = displayName?.trim();
