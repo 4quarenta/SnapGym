@@ -22,7 +22,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: <Override>[
+        overrides: [
           weeklyRankingProvider('following').overrideWith(
             (ref) async => const <RankingEntry>[
               RankingEntry(
