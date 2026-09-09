@@ -16,23 +16,39 @@ final feedCheckinsProvider = FutureProvider.autoDispose<List<FeedCheckin>>((
   return ref.watch(feedRepositoryProvider).fetchLatest();
 });
 
+final profileCheckinsProvider = FutureProvider.autoDispose
+    .family<List<FeedCheckin>, String>((ref, userId) async {
+      return ref.watch(feedRepositoryProvider).fetchByUser(userId);
+    });
+
 class FeedRepository {
   const FeedRepository(this._client);
 
   final SupabaseClient? _client;
 
   Future<List<FeedCheckin>> fetchLatest() async {
-    final rows = await _requireClient
-        .from('checkins')
-        .select(
-          'id,user_id,workout_type,duration_minutes,note,photo_path,performed_at,profiles!checkins_user_id_fkey(username,display_name)',
-        )
-        .order('created_at', ascending: false)
-        .limit(30);
+    final dynamic response = await _requireClient.rpc(
+      'get_social_feed',
+      params: <String, dynamic>{'p_limit': 30, 'p_offset': 0},
+    );
+    return _mapRows(_rows(response));
+  }
 
+  Future<List<FeedCheckin>> fetchByUser(String userId) async {
+    final dynamic response = await _requireClient.rpc(
+      'get_profile_checkins',
+      params: <String, dynamic>{
+        'p_user_id': userId,
+        'p_limit': 30,
+        'p_offset': 0,
+      },
+    );
+    return _mapRows(_rows(response));
+  }
+
+  Future<List<FeedCheckin>> _mapRows(List<Map<String, dynamic>> rows) {
     return Future.wait(
       rows.map((row) async {
-        final profile = row['profiles'] as Map<String, dynamic>?;
         final photoPath = row['photo_path'] as String;
         final signedUrl = await _requireClient.storage
             .from(MediaStorage.checkinBucket)
@@ -42,15 +58,31 @@ class FeedRepository {
           id: row['id'] as String,
           userId: row['user_id'] as String,
           workoutType: WorkoutType.fromDb(row['workout_type'] as String),
-          durationMinutes: row['duration_minutes'] as int,
+          durationMinutes: _asInt(row['duration_minutes']),
           note: row['note'] as String?,
           photoUrl: signedUrl,
           performedAt: DateTime.parse(row['performed_at'] as String).toLocal(),
-          username: profile?['username'] as String?,
-          displayName: profile?['display_name'] as String?,
+          username: row['username'] as String?,
+          displayName: row['display_name'] as String?,
+          likeCount: _asInt(row['like_count']),
+          commentCount: _asInt(row['comment_count']),
+          likedByMe: row['liked_by_me'] as bool? ?? false,
         );
       }),
     );
+  }
+
+  List<Map<String, dynamic>> _rows(dynamic response) {
+    if (response is! List) return const <Map<String, dynamic>>[];
+    return response
+        .whereType<Map>()
+        .map((row) => Map<String, dynamic>.from(row))
+        .toList();
+  }
+
+  int _asInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse('$value') ?? 0;
   }
 
   SupabaseClient get _requireClient {
