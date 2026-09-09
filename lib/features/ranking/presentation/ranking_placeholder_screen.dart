@@ -136,7 +136,7 @@ class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: SgSpacing.xs),
-        const Text('Dias ativos definem a posição. Check-ins e minutos desempatatam.'),
+        const Text('Dias ativos definem a posição. Check-ins e minutos desempatam.'),
         const SizedBox(height: SgSpacing.sm),
         ranking.when(
           data: (entries) => entries.isEmpty
