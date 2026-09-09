@@ -110,10 +110,9 @@ class UpdateRepository {
       return UpdateInstallResult.permissionRequired;
     }
 
-    await _nativeChannel.invokeMethod<void>(
-      'installApk',
-      <String, String>{'path': apk.path},
-    );
+    await _nativeChannel.invokeMethod<void>('installApk', <String, String>{
+      'path': apk.path,
+    });
     return UpdateInstallResult.started;
   }
 

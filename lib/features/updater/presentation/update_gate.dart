@@ -135,9 +135,9 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
                 const SizedBox(height: SgSpacing.md),
                 Text(
                   'Novidades',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: SgSpacing.xs),
                 Text(notes),
@@ -157,9 +157,9 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
                 const SizedBox(height: SgSpacing.md),
                 Text(
                   _message!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: SgColors.moonstone,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: SgColors.moonstone),
                 ),
               ],
             ],
