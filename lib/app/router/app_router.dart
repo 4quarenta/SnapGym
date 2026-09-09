@@ -58,9 +58,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/users/:userId',
-        builder: (context, state) => PublicProfileScreen(
-          userId: state.pathParameters['userId']!,
-        ),
+        builder: (context, state) =>
+            PublicProfileScreen(userId: state.pathParameters['userId']!),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

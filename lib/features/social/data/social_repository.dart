@@ -37,10 +37,7 @@ class SocialRepository {
   Future<List<SocialProfile>> searchProfiles(String query) async {
     final response = await _requireClient.rpc<List<dynamic>>(
       'search_social_profiles',
-      params: <String, dynamic>{
-        'p_query': query.trim(),
-        'p_limit': 30,
-      },
+      params: <String, dynamic>{'p_query': query.trim(), 'p_limit': 30},
     );
     return _rows(response).map(SocialProfile.fromJson).toList();
   }

@@ -215,10 +215,9 @@ class _CheckinCard extends ConsumerWidget {
   }
 
   Future<void> _toggleLike(WidgetRef ref) async {
-    await ref.read(socialRepositoryProvider).setLiked(
-          checkinId: item.id,
-          liked: !item.likedByMe,
-        );
+    await ref
+        .read(socialRepositoryProvider)
+        .setLiked(checkinId: item.id, liked: !item.likedByMe);
     ref.invalidate(feedCheckinsProvider);
     ref.invalidate(profileCheckinsProvider(item.userId));
   }
@@ -304,10 +303,9 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
 
     setState(() => _sending = true);
     try {
-      await ref.read(socialRepositoryProvider).addComment(
-            checkinId: widget.checkinId,
-            body: body,
-          );
+      await ref
+          .read(socialRepositoryProvider)
+          .addComment(checkinId: widget.checkinId, body: body);
       _controller.clear();
       ref.invalidate(checkinCommentsProvider(widget.checkinId));
       ref.invalidate(feedCheckinsProvider);

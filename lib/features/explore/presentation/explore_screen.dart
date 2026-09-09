@@ -211,7 +211,10 @@ class _ExploreError extends StatelessWidget {
           children: <Widget>[
             const Text('Não foi possível carregar os atletas.'),
             const SizedBox(height: SgSpacing.sm),
-            TextButton(onPressed: onRetry, child: const Text('Tentar novamente')),
+            TextButton(
+              onPressed: onRetry,
+              child: const Text('Tentar novamente'),
+            ),
           ],
         ),
       ),
