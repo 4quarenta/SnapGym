@@ -11,7 +11,6 @@ const expectedAudience = "snapgym-update-publisher";
 const expectedRepository = "4quarenta/SnapGym";
 const expectedWorkflowRef =
   "4quarenta/SnapGym/.github/workflows/publish_test_builds.yml@refs/heads/main";
-const bucket = "app-updates";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -21,11 +20,12 @@ function json(body: unknown, status = 200): Response {
 }
 
 type PublishRequest = {
-  action?: "prepare" | "finalize";
+  action?: "publish";
   version?: string;
   build?: number;
   sha256?: string;
   release_notes?: string | null;
+  github_asset_id?: number;
 };
 
 async function authorize(req: Request): Promise<void> {
@@ -55,7 +55,11 @@ function validateMetadata(data: PublishRequest) {
   const build = data.build;
   const sha256 = data.sha256?.trim().toLowerCase() ?? "";
   const releaseNotes = data.release_notes?.trim() || null;
+  const githubAssetId = data.github_asset_id;
 
+  if (data.action !== "publish") {
+    throw new Error("Invalid publication action.");
+  }
   if (!/^\d+\.\d+\.\d+(?:[-+][a-zA-Z0-9.-]+)?$/.test(version)) {
     throw new Error("Invalid version name.");
   }
@@ -65,12 +69,20 @@ function validateMetadata(data: PublishRequest) {
   if (!/^[a-f0-9]{64}$/.test(sha256)) {
     throw new Error("Invalid SHA-256.");
   }
+  if (!Number.isSafeInteger(githubAssetId) || (githubAssetId ?? 0) <= 0) {
+    throw new Error("Invalid GitHub release asset id.");
+  }
   if (releaseNotes && releaseNotes.length > 4000) {
     throw new Error("Release notes are too long.");
   }
 
-  const objectPath = `dev/android/${version}-${build}.apk`;
-  return { version, build: build as number, sha256, releaseNotes, objectPath };
+  return {
+    version,
+    build: build as number,
+    sha256,
+    releaseNotes,
+    githubAssetId: githubAssetId as number,
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -78,8 +90,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     await authorize(req);
-    const data = (await req.json()) as PublishRequest;
-    const metadata = validateMetadata(data);
+    const metadata = validateMetadata((await req.json()) as PublishRequest);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -91,73 +102,44 @@ Deno.serve(async (req: Request) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    if (data.action === "prepare") {
-      const { data: signed, error } = await supabase.storage
-        .from(bucket)
-        .createSignedUploadUrl(metadata.objectPath, { upsert: true });
+    const downloadUrl =
+      `${supabaseUrl}/functions/v1/download-app-update?asset_id=${metadata.githubAssetId}`;
+    const releaseUrl =
+      `https://github.com/${expectedRepository}/releases/tag/test-v${metadata.version}`;
 
-      if (error || !signed?.signedUrl || !signed?.token) {
-        console.error("signed upload creation failed", error);
-        return json({ error: "Could not authorize update upload." }, 500);
-      }
+    const { error: metadataError } = await supabase
+      .from("app_versions")
+      .upsert(
+        {
+          platform: "android",
+          channel: "dev",
+          version_name: metadata.version,
+          build_number: metadata.build,
+          download_url: downloadUrl,
+          action_url: releaseUrl,
+          sha256: metadata.sha256,
+          release_notes: metadata.releaseNotes,
+          is_mandatory: false,
+          is_active: true,
+          published_at: new Date().toISOString(),
+        },
+        { onConflict: "platform,channel,build_number" },
+      );
 
-      return json({
-        ok: true,
-        path: metadata.objectPath,
-        signed_url: signed.signedUrl,
-        token: signed.token,
-        expires_in_seconds: 7200,
-      });
+    if (metadataError) {
+      console.error("update metadata failed", metadataError);
+      return json({ error: "Could not publish update metadata." }, 500);
     }
 
-    if (data.action === "finalize") {
-      const fileName = metadata.objectPath.split("/").pop()!;
-      const { data: objects, error: listError } = await supabase.storage
-        .from(bucket)
-        .list("dev/android", { search: fileName, limit: 10 });
-
-      if (listError || !objects?.some((item) => item.name === fileName)) {
-        console.error("published APK not found", listError);
-        return json({ error: "Uploaded APK was not found." }, 409);
-      }
-
-      const downloadUrl =
-        `${supabaseUrl}/storage/v1/object/public/${bucket}/${metadata.objectPath}`;
-
-      const { error: metadataError } = await supabase
-        .from("app_versions")
-        .upsert(
-          {
-            platform: "android",
-            channel: "dev",
-            version_name: metadata.version,
-            build_number: metadata.build,
-            download_url: downloadUrl,
-            action_url: null,
-            sha256: metadata.sha256,
-            release_notes: metadata.releaseNotes,
-            is_mandatory: false,
-            is_active: true,
-            published_at: new Date().toISOString(),
-          },
-          { onConflict: "platform,channel,build_number" },
-        );
-
-      if (metadataError) {
-        console.error("update metadata failed", metadataError);
-        return json({ error: "Could not publish update metadata." }, 500);
-      }
-
-      return json({
-        ok: true,
-        version: metadata.version,
-        build: metadata.build,
-        sha256: metadata.sha256,
-        download_url: downloadUrl,
-      });
-    }
-
-    return json({ error: "Invalid publication action." }, 400);
+    return json({
+      ok: true,
+      version: metadata.version,
+      build: metadata.build,
+      sha256: metadata.sha256,
+      github_asset_id: metadata.githubAssetId,
+      download_url: downloadUrl,
+      release_url: releaseUrl,
+    });
   } catch (error) {
     console.error("publish-app-update error", error);
     return json({ error: "Unauthorized or invalid update publication." }, 401);

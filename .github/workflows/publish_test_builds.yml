@@ -10,7 +10,7 @@ on:
       - "pubspec.yaml"
       - "pubspec.lock"
       - "config/dev.json"
-      - "supabase/functions/publish-app-update/**"
+      - "supabase/functions/**"
       - ".github/workflows/publish_test_builds.yml"
 
 permissions:
@@ -174,93 +174,27 @@ jobs:
           cat > RELEASE_NOTES.md <<EOF
           ## SnapGym — Test Build v${VERSION_NAME} (${BUILD_NUMBER})
 
-          ### Incluído
-          - verificação automática de versão ao abrir o aplicativo
-          - aviso quando uma versão mais recente está disponível
-          - download do APK dentro do próprio SnapGym no Android
-          - verificação SHA-256 antes da instalação
-          - abertura do instalador oficial do Android após o download
-          - chave de assinatura estável exclusiva do flavor DEV, permitindo atualizar o APK sem reinstalar nas próximas versões
-          - permissões de sideload restritas ao flavor DEV
-          - publicação segura do APK no Supabase Storage usando GitHub OIDC, sem segredo do Supabase no repositório
+          ### Fase 4 — Social
+          - descoberta e busca de atletas
+          - perfis públicos com seguidores, seguindo e total de treinos
+          - seguir e deixar de seguir atletas
+          - feed social com o próprio usuário e atletas seguidos
+          - curtidas em check-ins
+          - comentários e exclusão do próprio comentário
+          - histórico de check-ins nos perfis
+          - sistema de atualização Android usando o APK publicado no GitHub Release
 
           ### Android
           **SnapGym-Android-dev.apk** é um APK release de desenvolvimento e pode ser instalado em aparelho real.
 
-          Na primeira instalação desta nova linha de assinatura, remova builds antigos do SnapGym DEV. Depois disso, versões futuras assinadas com a mesma chave poderão atualizar a instalação existente.
+          O APK fica armazenado somente no GitHub Release. O SnapGym usa o Supabase apenas para o catálogo de versão e para resolver, de forma segura, o download do asset do repositório privado. O SHA-256 do APK é validado antes da instalação.
 
           ### iOS
-          **SnapGym-iOS-Simulator-dev.app.zip** permanece destinado ao iOS Simulator. Em aparelhos reais, updates futuros serão direcionados por TestFlight/App Store, conforme as regras da Apple.
+          **SnapGym-iOS-Simulator-dev.app.zip** é destinado ao iOS Simulator. Em aparelhos reais, a distribuição futura será feita por TestFlight/App Store.
           EOF
 
-      - name: Publish Android updater binary
-        env:
-          VERSION_NAME: ${{ steps.version.outputs.name }}
-          BUILD_NUMBER: ${{ steps.version.outputs.build }}
-          PUBLISH_ENDPOINT: https://zsnsxodhpnffcnippzkv.supabase.co/functions/v1/publish-app-update
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          APK="$GITHUB_WORKSPACE/release-assets/SnapGym-Android-dev.apk"
-          APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
-          UPDATE_NOTES="Atualização ${VERSION_NAME}: sistema de atualização automática e melhorias da versão de teste."
-
-          get_oidc_token() {
-            curl --fail-with-body --silent --show-error \
-              -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
-              "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=snapgym-update-publisher" \
-              | jq -r '.value'
-          }
-
-          OIDC_TOKEN="$(get_oidc_token)"
-          PREPARE_BODY="$(jq -n \
-            --arg version "$VERSION_NAME" \
-            --argjson build "$BUILD_NUMBER" \
-            --arg sha256 "$APK_SHA256" \
-            --arg notes "$UPDATE_NOTES" \
-            '{action:"prepare",version:$version,build:$build,sha256:$sha256,release_notes:$notes}')"
-
-          PREPARE_RESPONSE="$(curl --fail-with-body --silent --show-error \
-            -X POST "$PUBLISH_ENDPOINT" \
-            -H "Authorization: Bearer $OIDC_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data "$PREPARE_BODY")"
-
-          SIGNED_URL="$(printf '%s' "$PREPARE_RESPONSE" | jq -r '.signed_url')"
-          if [ -z "$SIGNED_URL" ] || [ "$SIGNED_URL" = "null" ]; then
-            echo "Update publisher did not return a signed upload URL."
-            exit 1
-          fi
-
-          echo "Uploading updater APK through short-lived signed URL..."
-          curl --fail-with-body --show-error \
-            --retry 3 \
-            --retry-delay 2 \
-            --retry-all-errors \
-            -X PUT "$SIGNED_URL" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            -H "Cache-Control: max-age=3600" \
-            -H "x-upsert: true" \
-            --upload-file "$APK" \
-            --output /dev/null
-
-          OIDC_TOKEN="$(get_oidc_token)"
-          FINALIZE_BODY="$(jq -n \
-            --arg version "$VERSION_NAME" \
-            --argjson build "$BUILD_NUMBER" \
-            --arg sha256 "$APK_SHA256" \
-            --arg notes "$UPDATE_NOTES" \
-            '{action:"finalize",version:$version,build:$build,sha256:$sha256,release_notes:$notes}')"
-
-          curl --fail-with-body --silent --show-error \
-            -X POST "$PUBLISH_ENDPOINT" \
-            -H "Authorization: Bearer $OIDC_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data "$FINALIZE_BODY" \
-            | jq .
-
       - name: Publish or update GitHub pre-release
+        id: github_release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION_NAME: ${{ steps.version.outputs.name }}
@@ -284,3 +218,47 @@ jobs:
               --notes-file RELEASE_NOTES.md \
               --prerelease
           fi
+
+          ASSET_ID="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" \
+            --jq '.assets[] | select(.name == "SnapGym-Android-dev.apk") | .id')"
+
+          if [ -z "$ASSET_ID" ]; then
+            echo "Android release asset id was not found."
+            exit 1
+          fi
+
+          echo "android_asset_id=$ASSET_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Publish updater metadata
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build }}
+          GITHUB_ASSET_ID: ${{ steps.github_release.outputs.android_asset_id }}
+          PUBLISH_ENDPOINT: https://zsnsxodhpnffcnippzkv.supabase.co/functions/v1/publish-app-update
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APK="$GITHUB_WORKSPACE/release-assets/SnapGym-Android-dev.apk"
+          APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          UPDATE_NOTES="Atualização ${VERSION_NAME}: recursos sociais, perfis, seguir atletas, curtidas, comentários e melhorias da versão de teste."
+
+          OIDC_TOKEN="$(curl --fail-with-body --silent --show-error \
+            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=snapgym-update-publisher" \
+            | jq -r '.value')"
+
+          BODY="$(jq -n \
+            --arg version "$VERSION_NAME" \
+            --argjson build "$BUILD_NUMBER" \
+            --arg sha256 "$APK_SHA256" \
+            --arg notes "$UPDATE_NOTES" \
+            --argjson github_asset_id "$GITHUB_ASSET_ID" \
+            '{action:"publish",version:$version,build:$build,sha256:$sha256,release_notes:$notes,github_asset_id:$github_asset_id}')"
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "$PUBLISH_ENDPOINT" \
+            -H "Authorization: Bearer $OIDC_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$BODY" \
+            | jq .

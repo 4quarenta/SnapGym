@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/sg_colors.dart';
 import '../../../core/theme/sg_spacing.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../feed/data/feed_repository.dart';
+import '../../feed/domain/feed_checkin.dart';
+import '../../social/data/social_repository.dart';
 import '../data/profile_repository.dart';
 import '../domain/profile_validation.dart';
 import '../domain/user_profile.dart';
@@ -21,6 +25,10 @@ class ProfileScreen extends ConsumerWidget {
       child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(currentProfileProvider);
+          if (user != null) {
+            ref.invalidate(socialProfileProvider(user.id));
+            ref.invalidate(profileCheckinsProvider(user.id));
+          }
           await ref.read(currentProfileProvider.future);
         },
         child: ListView(
@@ -78,77 +86,228 @@ class _ProfileContent extends ConsumerWidget {
     final initial = profile.displayName?.trim().isNotEmpty == true
         ? profile.displayName!.trim().characters.first.toUpperCase()
         : 'S';
+    final social = ref.watch(socialProfileProvider(profile.id));
+    final checkins = ref.watch(profileCheckinsProvider(profile.id));
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(SgSpacing.xl),
-        child: Column(
-          children: <Widget>[
-            CircleAvatar(
-              radius: 42,
-              backgroundColor: SgColors.orange,
-              foregroundColor: SgColors.jet,
-              child: Text(
-                initial,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: SgColors.jet,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(SgSpacing.xl),
+            child: Column(
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 42,
+                  backgroundColor: SgColors.orange,
+                  foregroundColor: SgColors.jet,
+                  child: Text(
+                    initial,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: SgColors.jet,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: SgSpacing.md),
-            Text(
-              displayName,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: SgSpacing.xxs),
-            Text(
-              username,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: SgColors.moonstone,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (profile.bio != null) ...<Widget>[
-              const SizedBox(height: SgSpacing.md),
-              Text(
-                profile.bio!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-            if (email != null) ...<Widget>[
-              const SizedBox(height: SgSpacing.lg),
-              Text(
-                email!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                const SizedBox(height: SgSpacing.md),
+                Text(
+                  displayName,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
-              ),
-            ],
-            const SizedBox(height: SgSpacing.xl),
-            FilledButton.icon(
-              onPressed: () async {
-                final saved = await showModalBottomSheet<bool>(
-                  context: context,
-                  isScrollControlled: true,
-                  useSafeArea: true,
-                  builder: (_) => _EditProfileSheet(profile: profile),
-                );
-                if (saved == true) {
-                  ref.invalidate(currentProfileProvider);
-                }
-              },
-              icon: const Icon(Icons.edit_outlined),
-              label: Text(
-                profile.isConfigured ? 'Editar perfil' : 'Configurar perfil',
-              ),
+                const SizedBox(height: SgSpacing.xxs),
+                Text(
+                  username,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: SgColors.moonstone,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (profile.bio != null) ...<Widget>[
+                  const SizedBox(height: SgSpacing.md),
+                  Text(
+                    profile.bio!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+                const SizedBox(height: SgSpacing.xl),
+                social.when(
+                  loading: () => const SizedBox(
+                    height: 48,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stackTrace) => const SizedBox.shrink(),
+                  data: (value) => value == null
+                      ? const SizedBox.shrink()
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            _ProfileStat(
+                              value: value.checkinCount,
+                              label: 'treinos',
+                            ),
+                            _ProfileStat(
+                              value: value.followerCount,
+                              label: 'seguidores',
+                            ),
+                            _ProfileStat(
+                              value: value.followingCount,
+                              label: 'seguindo',
+                            ),
+                          ],
+                        ),
+                ),
+                if (email != null) ...<Widget>[
+                  const SizedBox(height: SgSpacing.lg),
+                  Text(
+                    email!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: SgSpacing.xl),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      final saved = await showModalBottomSheet<bool>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (_) => _EditProfileSheet(profile: profile),
+                      );
+                      if (saved == true) {
+                        ref.invalidate(currentProfileProvider);
+                        ref.invalidate(socialProfileProvider(profile.id));
+                      }
+                    },
+                    icon: const Icon(Icons.edit_outlined),
+                    label: Text(
+                      profile.isConfigured
+                          ? 'Editar perfil'
+                          : 'Configurar perfil',
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
+        const SizedBox(height: SgSpacing.xl),
+        Text(
+          'Meus treinos',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: SgSpacing.md),
+        checkins.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) => const _ProfileMessage(
+            message: 'Não foi possível carregar seu histórico de treinos.',
+          ),
+          data: (items) => items.isEmpty
+              ? const _ProfileMessage(
+                  message: 'Seus check-ins aparecerão aqui.',
+                )
+              : Column(
+                  children: items
+                      .map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: SgSpacing.md),
+                          child: _OwnWorkoutCard(item: item),
+                        ),
+                      )
+                      .toList(),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileStat extends StatelessWidget {
+  const _ProfileStat({required this.value, required this.label});
+
+  final int value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Text(
+          '$value',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: SgColors.darkTextSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OwnWorkoutCard extends StatelessWidget {
+  const _OwnWorkoutCard({required this.item});
+
+  final FeedCheckin item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: <Widget>[
+          SizedBox(
+            width: 108,
+            height: 108,
+            child: Image.network(
+              item.photoUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const ColoredBox(
+                color: SgColors.darkSurfaceElevated,
+                child: Center(
+                  child: PhosphorIcon(PhosphorIconsBold.imageBroken),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(SgSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    item.workoutType.label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: SgSpacing.xxs),
+                  Text('${item.durationMinutes} min'),
+                  const SizedBox(height: SgSpacing.sm),
+                  Text(
+                    '${item.likeCount} curtidas • ${item.commentCount} comentários',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: SgColors.darkTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -288,6 +447,22 @@ class _ProfileUnavailable extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(SgSpacing.xl),
         child: Text('Perfil não encontrado para esta conta.'),
+      ),
+    );
+  }
+}
+
+class _ProfileMessage extends StatelessWidget {
+  const _ProfileMessage({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(SgSpacing.xl),
+        child: Text(message, textAlign: TextAlign.center),
       ),
     );
   }

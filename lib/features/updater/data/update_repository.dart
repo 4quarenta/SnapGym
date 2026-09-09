@@ -88,16 +88,22 @@ class UpdateRepository {
     if (!canReuse) {
       if (await apk.exists()) await apk.delete();
 
-      await _dio.download(
-        downloadUrl,
-        apk.path,
-        deleteOnError: true,
-        onReceiveProgress: (received, total) {
-          if (total > 0) onProgress(received / total);
-        },
-      );
+      try {
+        await _dio.download(
+          downloadUrl,
+          apk.path,
+          deleteOnError: true,
+          onReceiveProgress: (received, total) {
+            if (total > 0) onProgress(received / total);
+          },
+        );
 
-      await _verifySha256(apk, update.sha256);
+        await _verifySha256(apk, update.sha256);
+        onProgress(1);
+      } catch (_) {
+        if (await apk.exists()) await apk.delete();
+        rethrow;
+      }
     } else {
       onProgress(1);
     }
