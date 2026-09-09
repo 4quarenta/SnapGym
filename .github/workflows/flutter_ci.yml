@@ -65,6 +65,9 @@ jobs:
       - name: Configure Android flavors
         run: python3 tool/configure_android_flavors.py
 
+      - name: Decode stable dev signing key
+        run: base64 --decode android/app/dev-signing.jks.b64 > android/app/dev-signing.jks
+
       - name: Dependencies
         run: flutter pub get
 
@@ -90,16 +93,16 @@ jobs:
             git push
           fi
 
-      - name: Build Android dev APK
+      - name: Build Android dev release APK
         timeout-minutes: 12
         run: >-
-          flutter build apk --debug --flavor dev -t lib/main_dev.dart
+          flutter build apk --release --flavor dev -t lib/main_dev.dart
           --dart-define-from-file=config/dev.json
 
       - name: Upload dev APK
         uses: actions/upload-artifact@v4
         with:
-          name: snapgym-dev-debug-apk
-          path: build/app/outputs/flutter-apk/app-dev-debug.apk
+          name: snapgym-dev-release-apk
+          path: build/app/outputs/flutter-apk/app-dev-release.apk
           if-no-files-found: error
           retention-days: 14
