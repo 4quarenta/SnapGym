@@ -96,7 +96,7 @@ Deno.serve(async (req: Request) => {
         .from(bucket)
         .createSignedUploadUrl(metadata.objectPath, { upsert: true });
 
-      if (error || !signed?.token) {
+      if (error || !signed?.signedUrl || !signed?.token) {
         console.error("signed upload creation failed", error);
         return json({ error: "Could not authorize update upload." }, 500);
       }
@@ -104,6 +104,7 @@ Deno.serve(async (req: Request) => {
       return json({
         ok: true,
         path: metadata.objectPath,
+        signed_url: signed.signedUrl,
         token: signed.token,
         expires_in_seconds: 7200,
       });
