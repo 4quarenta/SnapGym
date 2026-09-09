@@ -46,7 +46,7 @@ class SocialProfile {
     return '@$value';
   }
 
-  String get initial => name.characters.first.toUpperCase();
+  String get initial => name.substring(0, 1).toUpperCase();
 }
 
 int _asInt(dynamic value) {
