@@ -16,7 +16,7 @@ class _FakeUpdateRepository extends UpdateRepository {
       versionName: '0.5.1',
       buildNumber: 7,
       downloadUrl: 'https://example.invalid/update.apk',
-      sha256: 'a' * 64,
+      sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       releaseNotes: 'Correção do atualizador.',
       isMandatory: false,
       publishedAt: DateTime.utc(2026, 9, 10),
