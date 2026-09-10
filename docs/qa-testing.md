@@ -15,11 +15,15 @@ These are **data fixtures, not login accounts**. They are marked in `auth.users.
 
 The current fixture set generates representative data for:
 
-- follows;
-- likes on a real test check-in;
-- comments on a real test check-in;
+- six follows against the primary development account;
+- six likes on a real test check-in;
+- three comments on a real test check-in;
 - joins on a real test challenge;
-- all four Phase 6 activity-notification kinds.
+- all four Phase 6 activity-notification kinds;
+- three QA-created active challenges with different windows, targets and participant counts;
+- six searchable QA profiles for Explore/follow-unfollow tests.
+
+Remote verification from the primary development account currently confirms six QA profiles discoverable through `search_social_profiles`, three QA challenges visible through `get_active_challenges`, and a populated activity inbox containing all four event kinds.
 
 Do not add real personal data to these users.
 
@@ -32,11 +36,11 @@ delete from auth.users
 where coalesce((raw_app_meta_data->>'snapgym_test_user')::boolean, false);
 ```
 
-Foreign-key cascades remove their profiles, follows, likes, comments, challenge participation and activity entries.
+Foreign-key cascades remove their profiles, follows, likes, comments, QA-created challenges, challenge participation and activity entries.
 
 ## Automated coverage
 
-Flutter tests cover activity parsing, inbox rendering and the feed unread badge.
+Flutter tests cover activity parsing, inbox rendering and the feed unread badge, including both unread and zero-unread states.
 
 Database tests live under `supabase/tests/database` and run with pgTAP in a local Supabase stack. The Phase 6 suite validates:
 
@@ -48,4 +52,4 @@ Database tests live under `supabase/tests/database` and run with pgTAP in a loca
 - mark-one / mark-all read behavior;
 - RLS isolation between recipients.
 
-The database workflow uses only synthetic transactional users and rolls test data back.
+The database workflow uses only synthetic transactional users and rolls test data back. The CI workflow starts a clean local Supabase stack, replays migrations and runs `supabase test db`, so database regressions are checked independently of the hosted development data.
