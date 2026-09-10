@@ -24,6 +24,7 @@ class ActivityNotification {
     required this.createdAt,
     this.actorUsername,
     this.actorDisplayName,
+    this.actorAvatarKey,
     this.checkinId,
     this.workoutType,
     this.commentBody,
@@ -39,6 +40,7 @@ class ActivityNotification {
       actorId: json['actor_id'] as String,
       actorUsername: json['actor_username'] as String?,
       actorDisplayName: json['actor_display_name'] as String?,
+      actorAvatarKey: json['actor_avatar_key'] as String?,
       checkinId: json['checkin_id'] as String?,
       workoutType: json['workout_type'] as String?,
       commentBody: json['comment_body'] as String?,
@@ -56,6 +58,7 @@ class ActivityNotification {
   final String actorId;
   final String? actorUsername;
   final String? actorDisplayName;
+  final String? actorAvatarKey;
   final String? checkinId;
   final String? workoutType;
   final String? commentBody;

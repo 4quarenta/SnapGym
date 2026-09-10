@@ -5,6 +5,7 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 
 import '../../../core/theme/sg_colors.dart';
 import '../../../core/theme/sg_spacing.dart';
+import '../../../core/ui/sg_avatar.dart';
 import '../../../core/ui/sg_brand.dart';
 import '../../social/data/social_repository.dart';
 import '../../social/domain/social_profile.dart';
@@ -108,14 +109,10 @@ class _ProfileTile extends ConsumerWidget {
           padding: const EdgeInsets.all(SgSpacing.md),
           child: Row(
             children: <Widget>[
-              CircleAvatar(
+              SgAvatar(
+                label: profile.name,
+                avatarKey: profile.avatarKey,
                 radius: 24,
-                backgroundColor: SgColors.moonstone.withValues(alpha: 0.18),
-                foregroundColor: SgColors.moonstone,
-                child: Text(
-                  profile.initial,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
               ),
               const SizedBox(width: SgSpacing.md),
               Expanded(

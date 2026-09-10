@@ -1,6 +1,8 @@
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/storage/media_storage.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../auth/data/auth_repository.dart';
 import '../domain/profile_validation.dart';
@@ -53,6 +55,116 @@ class ProfileRepository {
         .eq('id', user.id)
         .select()
         .single();
+
+    return UserProfile.fromJson(data);
+  }
+
+  Future<UserProfile> updateAvatar(String sourceImagePath) async {
+    final user = _authRepository.currentUser;
+    if (user == null) throw StateError('No authenticated user.');
+
+    final previous = await fetch(user.id);
+    var compressed = await FlutterImageCompress.compressWithFile(
+      sourceImagePath,
+      minWidth: 720,
+      minHeight: 720,
+      quality: 78,
+      format: CompressFormat.jpeg,
+      keepExif: false,
+    );
+
+    if (compressed == null || compressed.isEmpty) {
+      throw StateError('Não foi possível preparar a foto do perfil.');
+    }
+
+    if (compressed.lengthInBytes > MediaStorage.maxProfilePhotoBytes) {
+      compressed = await FlutterImageCompress.compressWithFile(
+        sourceImagePath,
+        minWidth: 512,
+        minHeight: 512,
+        quality: 58,
+        format: CompressFormat.jpeg,
+        keepExif: false,
+      );
+    }
+
+    if (compressed == null || compressed.isEmpty) {
+      throw StateError('Não foi possível preparar a foto do perfil.');
+    }
+    if (compressed.lengthInBytes > MediaStorage.maxProfilePhotoBytes) {
+      throw StateError('A foto do perfil ficou maior que o limite de 1 MB.');
+    }
+
+    final objectPath =
+        '${user.id}/avatar-${DateTime.now().toUtc().microsecondsSinceEpoch}.jpg';
+
+    await _requireClient.storage
+        .from(MediaStorage.profileBucket)
+        .uploadBinary(
+          objectPath,
+          compressed,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            cacheControl: '86400',
+            upsert: false,
+          ),
+        );
+
+    try {
+      final data = await _requireClient
+          .from('profiles')
+          .update(<String, dynamic>{'avatar_key': objectPath})
+          .eq('id', user.id)
+          .select()
+          .single();
+
+      final oldKey = previous.avatarKey?.trim();
+      if (oldKey != null && oldKey.isNotEmpty && oldKey != objectPath) {
+        try {
+          await _requireClient.storage
+              .from(MediaStorage.profileBucket)
+              .remove(<String>[oldKey]);
+        } catch (_) {
+          // The profile already points to the new image. Stale media can be
+          // cleaned independently without breaking the user's identity.
+        }
+      }
+
+      return UserProfile.fromJson(data);
+    } catch (_) {
+      try {
+        await _requireClient.storage
+            .from(MediaStorage.profileBucket)
+            .remove(<String>[objectPath]);
+      } catch (_) {
+        // Preserve the original failure; orphan cleanup is best effort.
+      }
+      rethrow;
+    }
+  }
+
+  Future<UserProfile> removeAvatar() async {
+    final user = _authRepository.currentUser;
+    if (user == null) throw StateError('No authenticated user.');
+
+    final current = await fetch(user.id);
+    final data = await _requireClient
+        .from('profiles')
+        .update(<String, dynamic>{'avatar_key': null})
+        .eq('id', user.id)
+        .select()
+        .single();
+
+    final oldKey = current.avatarKey?.trim();
+    if (oldKey != null && oldKey.isNotEmpty) {
+      try {
+        await _requireClient.storage
+            .from(MediaStorage.profileBucket)
+            .remove(<String>[oldKey]);
+      } catch (_) {
+        // A stale object is preferable to leaving a broken profile reference.
+      }
+    }
 
     return UserProfile.fromJson(data);
   }

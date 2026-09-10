@@ -5,6 +5,7 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 
 import '../../../core/theme/sg_colors.dart';
 import '../../../core/theme/sg_spacing.dart';
+import '../../../core/ui/sg_avatar.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../feed/data/feed_repository.dart';
 import '../../feed/domain/feed_checkin.dart';
@@ -102,17 +103,10 @@ class _ProfileHeader extends ConsumerWidget {
         padding: const EdgeInsets.all(SgSpacing.xl),
         child: Column(
           children: <Widget>[
-            CircleAvatar(
-              radius: 42,
-              backgroundColor: SgColors.orange,
-              foregroundColor: SgColors.jet,
-              child: Text(
-                profile.initial,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: SgColors.jet,
-                ),
-              ),
+            SgAvatar(
+              label: profile.name,
+              avatarKey: profile.avatarKey,
+              radius: 44,
             ),
             const SizedBox(height: SgSpacing.md),
             Text(

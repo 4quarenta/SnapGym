@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/sg_colors.dart';
 import '../../../core/theme/sg_spacing.dart';
+import '../../../core/ui/sg_avatar.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../feed/data/feed_repository.dart';
 import '../../feed/domain/feed_checkin.dart';
@@ -83,9 +85,6 @@ class _ProfileContent extends ConsumerWidget {
     final username = profile.username == null
         ? '@usuario'
         : '@${profile.username}';
-    final initial = profile.displayName?.trim().isNotEmpty == true
-        ? profile.displayName!.trim().characters.first.toUpperCase()
-        : 'S';
     final social = ref.watch(socialProfileProvider(profile.id));
     final checkins = ref.watch(profileCheckinsProvider(profile.id));
 
@@ -97,18 +96,7 @@ class _ProfileContent extends ConsumerWidget {
             padding: const EdgeInsets.all(SgSpacing.xl),
             child: Column(
               children: <Widget>[
-                CircleAvatar(
-                  radius: 42,
-                  backgroundColor: SgColors.orange,
-                  foregroundColor: SgColors.jet,
-                  child: Text(
-                    initial,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: SgColors.jet,
-                    ),
-                  ),
-                ),
+                _EditableAvatar(profile: profile),
                 const SizedBox(height: SgSpacing.md),
                 Text(
                   displayName,
@@ -226,6 +214,164 @@ class _ProfileContent extends ConsumerWidget {
                 ),
         ),
       ],
+    );
+  }
+}
+
+enum _AvatarAction { camera, gallery, remove }
+
+class _EditableAvatar extends ConsumerStatefulWidget {
+  const _EditableAvatar({required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  ConsumerState<_EditableAvatar> createState() => _EditableAvatarState();
+}
+
+class _EditableAvatarState extends ConsumerState<_EditableAvatar> {
+  bool _busy = false;
+
+  String get _label =>
+      widget.profile.displayName ?? widget.profile.username ?? 'Atleta SnapGym';
+
+  Future<void> _openActions() async {
+    if (_busy) return;
+
+    final action = await showModalBottomSheet<_AvatarAction>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Tirar foto'),
+              onTap: () => Navigator.pop(context, _AvatarAction.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Escolher da galeria'),
+              onTap: () => Navigator.pop(context, _AvatarAction.gallery),
+            ),
+            if (widget.profile.avatarKey != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: const Text('Remover foto'),
+                onTap: () => Navigator.pop(context, _AvatarAction.remove),
+              ),
+            const SizedBox(height: SgSpacing.sm),
+          ],
+        ),
+      ),
+    );
+
+    if (action == null || !mounted) return;
+    if (action == _AvatarAction.remove) {
+      await _remove();
+      return;
+    }
+
+    final source = action == _AvatarAction.camera
+        ? ImageSource.camera
+        : ImageSource.gallery;
+    final image = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    if (image == null || !mounted) return;
+    await _upload(image.path);
+  }
+
+  Future<void> _upload(String path) async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(profileRepositoryProvider).updateAvatar(path);
+      _refreshIdentity();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível atualizar sua foto.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _remove() async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(profileRepositoryProvider).removeAvatar();
+      _refreshIdentity();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível remover sua foto.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _refreshIdentity() {
+    ref.invalidate(currentProfileProvider);
+    ref.invalidate(socialProfileProvider(widget.profile.id));
+    ref.invalidate(profileCheckinsProvider(widget.profile.id));
+    ref.invalidate(feedCheckinsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Alterar foto do perfil',
+      child: InkWell(
+        onTap: _openActions,
+        customBorder: const CircleBorder(),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: <Widget>[
+            Opacity(
+              opacity: _busy ? 0.55 : 1,
+              child: SgAvatar(
+                label: _label,
+                avatarKey: widget.profile.avatarKey,
+                radius: 46,
+              ),
+            ),
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.surface,
+                    width: 2,
+                  ),
+                ),
+                child: _busy
+                    ? const Padding(
+                        padding: EdgeInsets.all(7),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        Icons.camera_alt_rounded,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
