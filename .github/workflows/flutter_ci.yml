@@ -78,14 +78,21 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        run: flutter test
+        run: flutter test --exclude-tags preview
+
+      - name: Generate UI previews
+        run: |
+          flutter test test/competition_preview_test.dart --update-goldens
+          mkdir -p build/previews
+          cp test/goldens/competition-ranking.png build/previews/
+          cp test/goldens/competition-challenges.png build/previews/
 
       - name: Upload UI previews
         uses: actions/upload-artifact@v4
         with:
           name: snapgym-ui-previews
           path: build/previews/*.png
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
 
       - name: Persist generated Flutter files
