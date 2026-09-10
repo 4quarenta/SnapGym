@@ -1,0 +1,48 @@
+name: Patch Phase 6 Analyzer Findings
+
+on:
+  push:
+    branches: ["feature/phase-6-activity"]
+    paths:
+      - ".github/workflows/patch_phase6_analyze.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch analyzer findings
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          paths = [
+              Path('lib/features/activity/presentation/activity_screen.dart'),
+              Path('lib/features/feed/presentation/feed_with_activity_screen.dart'),
+          ]
+          old = "ref.watch(unreadActivityCountProvider).valueOrNull ?? 0"
+          new = "ref.watch(unreadActivityCountProvider).when(data: (value) => value, loading: () => 0, error: (error, stack) => 0)"
+          for path in paths:
+              text = path.read_text()
+              if old not in text:
+                  raise SystemExit(f'missing unread expression in {path}')
+              path.write_text(text.replace(old, new))
+
+          path = Path('lib/features/activity/presentation/activity_screen.dart')
+          text = path.read_text()
+          old_push = "context.push('/users/${item.actorId}');"
+          new_push = "await context.push<void>('/users/${item.actorId}');"
+          if old_push not in text:
+              raise SystemExit('missing profile push expression')
+          path.write_text(text.replace(old_push, new_push))
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/features/activity/presentation/activity_screen.dart lib/features/feed/presentation/feed_with_activity_screen.dart
+          git commit -m "fix: resolve Phase 6 analyzer findings"
+          git push
