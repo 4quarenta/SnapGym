@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/activity/presentation/activity_screen.dart';
 import '../../features/auth/application/auth_router_notifier.dart';
 import '../../features/auth/presentation/backend_configuration_screen.dart';
 import '../../features/auth/presentation/check_email_screen.dart';
@@ -9,7 +10,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/checkin/presentation/checkin_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
-import '../../features/feed/presentation/feed_screen.dart';
+import '../../features/feed/presentation/feed_with_activity_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/public_profile_screen.dart';
 import '../../features/ranking/presentation/ranking_placeholder_screen.dart';
@@ -65,6 +66,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             PublicProfileScreen(userId: state.pathParameters['userId']!),
       ),
+      GoRoute(
+        path: '/activity',
+        builder: (context, state) => const ActivityScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavigation(navigationShell: navigationShell);
@@ -74,7 +79,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: <RouteBase>[
               GoRoute(
                 path: '/feed',
-                builder: (context, state) => const FeedScreen(),
+                builder: (context, state) => const FeedWithActivityScreen(),
               ),
             ],
           ),
