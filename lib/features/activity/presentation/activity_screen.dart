@@ -15,7 +15,13 @@ class ActivityScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(activityNotificationsProvider);
-    final unread = ref.watch(unreadActivityCountProvider).when(data: (value) => value, loading: () => 0, error: (error, stack) => 0);
+    final unread = ref
+        .watch(unreadActivityCountProvider)
+        .when(
+          data: (value) => value,
+          loading: () => 0,
+          error: (error, stack) => 0,
+        );
 
     return Scaffold(
       appBar: AppBar(
@@ -129,16 +135,16 @@ class _ActivitySummary extends StatelessWidget {
                         ? 'Tudo em dia'
                         : '$unread ${unread == 1 ? 'novidade' : 'novidades'}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   Text(
                     unread == 0
                         ? 'Você não tem atividades pendentes.'
                         : 'Veja quem interagiu com seus treinos.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: SgColors.darkTextSecondary,
-                        ),
+                      color: SgColors.darkTextSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -161,9 +167,7 @@ class _ActivityTile extends ConsumerWidget {
     final icon = _iconFor(item.kind);
 
     return Card(
-      color: item.isRead
-          ? null
-          : SgColors.orange.withValues(alpha: 0.075),
+      color: item.isRead ? null : SgColors.orange.withValues(alpha: 0.075),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _open(context, ref),
@@ -177,8 +181,7 @@ class _ActivityTile extends ConsumerWidget {
                 children: <Widget>[
                   CircleAvatar(
                     radius: 23,
-                    backgroundColor:
-                        SgColors.moonstone.withValues(alpha: 0.18),
+                    backgroundColor: SgColors.moonstone.withValues(alpha: 0.18),
                     foregroundColor: SgColors.moonstone,
                     child: Text(
                       item.actorName.characters.first.toUpperCase(),
@@ -192,7 +195,9 @@ class _ActivityTile extends ConsumerWidget {
                       width: 24,
                       height: 24,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: Theme.of(context).colorScheme.surface,
@@ -363,9 +368,9 @@ class _ActivityMessage extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: SgSpacing.xs),
@@ -373,8 +378,8 @@ class _ActivityMessage extends StatelessWidget {
                   subtitle!,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: SgColors.darkTextSecondary,
-                      ),
+                    color: SgColors.darkTextSecondary,
+                  ),
                 ),
               ],
               if (actionLabel != null && onAction != null) ...[

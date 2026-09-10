@@ -16,7 +16,9 @@ void main() {
           ),
           unreadActivityCountProvider.overrideWith((ref) async => 4),
         ],
-        child: const MaterialApp(home: Scaffold(body: FeedWithActivityScreen())),
+        child: const MaterialApp(
+          home: Scaffold(body: FeedWithActivityScreen()),
+        ),
       ),
     );
 
@@ -26,7 +28,9 @@ void main() {
     expect(find.text('4'), findsOneWidget);
   });
 
-  testWidgets('feed hides badge when there is no unread activity', (tester) async {
+  testWidgets('feed hides badge when there is no unread activity', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -35,7 +39,9 @@ void main() {
           ),
           unreadActivityCountProvider.overrideWith((ref) async => 0),
         ],
-        child: const MaterialApp(home: Scaffold(body: FeedWithActivityScreen())),
+        child: const MaterialApp(
+          home: Scaffold(body: FeedWithActivityScreen()),
+        ),
       ),
     );
 

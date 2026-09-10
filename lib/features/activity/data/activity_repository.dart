@@ -10,8 +10,8 @@ final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
 
 final activityNotificationsProvider =
     FutureProvider.autoDispose<List<ActivityNotification>>((ref) {
-  return ref.watch(activityRepositoryProvider).list();
-});
+      return ref.watch(activityRepositoryProvider).list();
+    });
 
 final unreadActivityCountProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(activityRepositoryProvider).unreadCount();
@@ -30,9 +30,10 @@ class ActivityRepository {
 
     return response
         .whereType<Map<String, dynamic>>()
-        .map((row) => ActivityNotification.fromJson(
-              Map<String, dynamic>.from(row),
-            ))
+        .map(
+          (row) =>
+              ActivityNotification.fromJson(Map<String, dynamic>.from(row)),
+        )
         .toList();
   }
 

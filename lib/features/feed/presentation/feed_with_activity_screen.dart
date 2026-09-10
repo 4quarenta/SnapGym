@@ -13,7 +13,13 @@ class FeedWithActivityScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(unreadActivityCountProvider).when(data: (value) => value, loading: () => 0, error: (error, stack) => 0);
+    final unread = ref
+        .watch(unreadActivityCountProvider)
+        .when(
+          data: (value) => value,
+          loading: () => 0,
+          error: (error, stack) => 0,
+        );
 
     return Stack(
       children: <Widget>[
@@ -22,7 +28,9 @@ class FeedWithActivityScreen extends ConsumerWidget {
           top: MediaQuery.paddingOf(context).top + SgSpacing.sm,
           right: SgSpacing.md,
           child: Material(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+            color: Theme.of(
+              context,
+            ).colorScheme.surface.withValues(alpha: 0.92),
             shape: const CircleBorder(),
             elevation: 1,
             child: IconButton(
