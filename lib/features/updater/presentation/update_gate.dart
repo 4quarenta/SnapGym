@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,9 +10,14 @@ import '../data/update_repository.dart';
 import '../domain/app_update.dart';
 
 class UpdateGate extends ConsumerStatefulWidget {
-  const UpdateGate({required this.child, super.key});
+  const UpdateGate({
+    required this.child,
+    required this.navigatorKey,
+    super.key,
+  });
 
   final Widget child;
+  final GlobalKey<NavigatorState> navigatorKey;
 
   @override
   ConsumerState<UpdateGate> createState() => _UpdateGateState();
@@ -19,6 +25,7 @@ class UpdateGate extends ConsumerStatefulWidget {
 
 class _UpdateGateState extends ConsumerState<UpdateGate> {
   bool _checked = false;
+  int _navigatorRetries = 0;
 
   @override
   void initState() {
@@ -34,12 +41,25 @@ class _UpdateGateState extends ConsumerState<UpdateGate> {
       final update = await ref.read(updateRepositoryProvider).checkForUpdate();
       if (!mounted || update == null) return;
 
+      final navigatorContext = widget.navigatorKey.currentContext;
+      if (navigatorContext == null) {
+        if (_navigatorRetries < 3) {
+          _navigatorRetries += 1;
+          _checked = false;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+        }
+        return;
+      }
+
       await showDialog<void>(
-        context: context,
+        context: navigatorContext,
+        useRootNavigator: true,
         barrierDismissible: !update.isMandatory,
         builder: (context) => _UpdateDialog(update: update),
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('SnapGym updater check failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
       // Update checks must never block normal app startup.
     }
   }
