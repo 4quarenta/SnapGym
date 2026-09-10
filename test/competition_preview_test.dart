@@ -9,39 +9,31 @@ import 'package:snapgym/features/ranking/domain/ranking_entry.dart';
 import 'package:snapgym/features/ranking/presentation/ranking_placeholder_screen.dart';
 
 void main() {
-  testWidgets(
-    'exports competition ranking preview',
-    (tester) async {
-      final previewKey = GlobalKey();
-      await _pumpCompetition(tester, previewKey);
+  testWidgets('exports competition ranking preview', (tester) async {
+    final previewKey = GlobalKey();
+    await _pumpCompetition(tester, previewKey);
 
-      expect(find.text('Esta semana'), findsOneWidget);
-      await expectLater(
-        find.byKey(previewKey),
-        matchesGoldenFile('goldens/competition-ranking.png'),
-      );
-    },
-    tags: 'preview',
-  );
+    expect(find.text('Esta semana'), findsOneWidget);
+    await expectLater(
+      find.byKey(previewKey),
+      matchesGoldenFile('goldens/competition-ranking.png'),
+    );
+  }, tags: 'preview');
 
-  testWidgets(
-    'exports competition challenges preview',
-    (tester) async {
-      final previewKey = GlobalKey();
-      await _pumpCompetition(tester, previewKey);
+  testWidgets('exports competition challenges preview', (tester) async {
+    final previewKey = GlobalKey();
+    await _pumpCompetition(tester, previewKey);
 
-      await tester.tap(find.text('Desafios').first);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Desafios').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Desafios ativos'), findsOneWidget);
-      await expectLater(
-        find.byKey(previewKey),
-        matchesGoldenFile('goldens/competition-challenges.png'),
-      );
-    },
-    tags: 'preview',
-  );
+    expect(find.text('Desafios ativos'), findsOneWidget);
+    await expectLater(
+      find.byKey(previewKey),
+      matchesGoldenFile('goldens/competition-challenges.png'),
+    );
+  }, tags: 'preview');
 }
 
 Future<void> _pumpCompetition(WidgetTester tester, GlobalKey previewKey) async {
@@ -93,11 +85,8 @@ Future<void> _pumpCompetition(WidgetTester tester, GlobalKey previewKey) async {
           ],
         ),
         streakProvider.overrideWith(
-          (ref) async => const StreakSummary(
-            current: 6,
-            best: 11,
-            trainedToday: true,
-          ),
+          (ref) async =>
+              const StreakSummary(current: 6, best: 11, trainedToday: true),
         ),
         activeChallengesProvider.overrideWith(
           (ref) async => <ChallengeSummary>[

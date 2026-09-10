@@ -11,15 +11,15 @@ class RankingEntry {
   });
 
   factory RankingEntry.fromJson(Map<String, dynamic> json) => RankingEntry(
-        userId: json['user_id'] as String,
-        username: json['username'] as String,
-        displayName: json['display_name'] as String,
-        avatarKey: json['avatar_key'] as String?,
-        activeDays: (json['active_days'] as num).toInt(),
-        checkins: (json['checkins'] as num).toInt(),
-        totalMinutes: (json['total_minutes'] as num).toInt(),
-        rank: (json['rank'] as num).toInt(),
-      );
+    userId: json['user_id'] as String,
+    username: json['username'] as String,
+    displayName: json['display_name'] as String,
+    avatarKey: json['avatar_key'] as String?,
+    activeDays: (json['active_days'] as num).toInt(),
+    checkins: (json['checkins'] as num).toInt(),
+    totalMinutes: (json['total_minutes'] as num).toInt(),
+    rank: (json['rank'] as num).toInt(),
+  );
 
   final String userId;
   final String username;
@@ -39,10 +39,10 @@ class StreakSummary {
   });
 
   factory StreakSummary.fromJson(Map<String, dynamic> json) => StreakSummary(
-        current: (json['current_streak'] as num).toInt(),
-        best: (json['best_streak'] as num).toInt(),
-        trainedToday: json['trained_today'] as bool,
-      );
+    current: (json['current_streak'] as num).toInt(),
+    best: (json['best_streak'] as num).toInt(),
+    trainedToday: json['trained_today'] as bool,
+  );
 
   final int current;
   final int best;

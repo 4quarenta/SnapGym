@@ -10,8 +10,8 @@ final rankingRepositoryProvider = Provider<RankingRepository>((ref) {
 
 final weeklyRankingProvider = FutureProvider.autoDispose
     .family<List<RankingEntry>, String>((ref, scope) {
-  return ref.watch(rankingRepositoryProvider).weekly(scope: scope);
-});
+      return ref.watch(rankingRepositoryProvider).weekly(scope: scope);
+    });
 
 final streakProvider = FutureProvider.autoDispose<StreakSummary>((ref) {
   return ref.watch(rankingRepositoryProvider).streak();

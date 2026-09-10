@@ -26,9 +26,9 @@ class _ChallengesSectionState extends ConsumerState<ChallengesSection> {
             Expanded(
               child: Text(
                 'Desafios ativos',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
             FilledButton.tonalIcon(
@@ -82,10 +82,9 @@ class _ChallengesSectionState extends ConsumerState<ChallengesSection> {
     if (_busy.contains(challenge.id)) return;
     setState(() => _busy.add(challenge.id));
     try {
-      await ref.read(challengeRepositoryProvider).setJoined(
-            challengeId: challenge.id,
-            joined: !challenge.joined,
-          );
+      await ref
+          .read(challengeRepositoryProvider)
+          .setJoined(challengeId: challenge.id, joined: !challenge.joined);
       ref.invalidate(activeChallengesProvider);
       ref.invalidate(challengeRankingProvider(challenge.id));
     } catch (_) {
@@ -155,9 +154,8 @@ class _ChallengeCard extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           challenge.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 2),
                         Text('@${challenge.creatorUsername}'),
@@ -188,7 +186,9 @@ class _ChallengeCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: SgSpacing.xs),
-              LinearProgressIndicator(value: challenge.joined ? challenge.progress : 0),
+              LinearProgressIndicator(
+                value: challenge.joined ? challenge.progress : 0,
+              ),
               const SizedBox(height: SgSpacing.md),
               Row(
                 children: <Widget>[
@@ -234,11 +234,13 @@ class _ChallengeRankingSheet extends ConsumerWidget {
               Text(
                 challenge.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: SgSpacing.xs),
-              Text('Meta: ${challenge.targetDays} dias · ${challenge.participantCount} participantes'),
+              Text(
+                'Meta: ${challenge.targetDays} dias · ${challenge.participantCount} participantes',
+              ),
               const SizedBox(height: SgSpacing.lg),
               Expanded(
                 child: ranking.when(
@@ -263,19 +265,23 @@ class _ChallengeRankingSheet extends ConsumerWidget {
                               ),
                               title: Text(
                                 item.displayName,
-                                style: const TextStyle(fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                              subtitle: Text('@${item.username} · ${item.checkins} check-ins'),
+                              subtitle: Text(
+                                '@${item.username} · ${item.checkins} check-ins',
+                              ),
                               trailing: Text(
                                 '${item.activeDays}d',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w800),
                               ),
                             );
                           },
                         ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (_, _) => const Center(
                     child: Text('Não foi possível carregar o ranking.'),
                   ),
@@ -293,7 +299,8 @@ class _CreateChallengeSheet extends ConsumerStatefulWidget {
   const _CreateChallengeSheet();
 
   @override
-  ConsumerState<_CreateChallengeSheet> createState() => _CreateChallengeSheetState();
+  ConsumerState<_CreateChallengeSheet> createState() =>
+      _CreateChallengeSheetState();
 }
 
 class _CreateChallengeSheetState extends ConsumerState<_CreateChallengeSheet> {
@@ -339,8 +346,8 @@ class _CreateChallengeSheetState extends ConsumerState<_CreateChallengeSheet> {
               Text(
                 'Novo desafio',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: SgSpacing.lg),
               TextFormField(
@@ -447,7 +454,9 @@ class _CreateChallengeSheetState extends ConsumerState<_CreateChallengeSheet> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
     try {
-      await ref.read(challengeRepositoryProvider).create(
+      await ref
+          .read(challengeRepositoryProvider)
+          .create(
             title: _title.text,
             description: _description.text,
             startsOn: _startsOn,

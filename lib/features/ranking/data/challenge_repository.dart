@@ -12,14 +12,15 @@ final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
   );
 });
 
-final activeChallengesProvider = FutureProvider.autoDispose<List<ChallengeSummary>>(
-  (ref) => ref.watch(challengeRepositoryProvider).fetchActive(),
-);
+final activeChallengesProvider =
+    FutureProvider.autoDispose<List<ChallengeSummary>>(
+      (ref) => ref.watch(challengeRepositoryProvider).fetchActive(),
+    );
 
 final challengeRankingProvider = FutureProvider.autoDispose
     .family<List<ChallengeRankingEntry>, String>((ref, challengeId) {
-  return ref.watch(challengeRepositoryProvider).fetchRanking(challengeId);
-});
+      return ref.watch(challengeRepositoryProvider).fetchRanking(challengeId);
+    });
 
 class ChallengeRepository {
   const ChallengeRepository(this._client, this._authRepository);
@@ -38,10 +39,7 @@ class ChallengeRepository {
   Future<List<ChallengeRankingEntry>> fetchRanking(String challengeId) async {
     final response = await _requireClient.rpc<List<dynamic>>(
       'get_challenge_ranking',
-      params: <String, dynamic>{
-        'p_challenge_id': challengeId,
-        'p_limit': 50,
-      },
+      params: <String, dynamic>{'p_challenge_id': challengeId, 'p_limit': 50},
     );
     return _rows(response).map(ChallengeRankingEntry.fromJson).toList();
   }

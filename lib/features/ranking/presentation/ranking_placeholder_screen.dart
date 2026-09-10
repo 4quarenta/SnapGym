@@ -9,15 +9,13 @@ import '../domain/ranking_entry.dart';
 import 'challenges_section.dart';
 
 class RankingPlaceholderScreen extends ConsumerStatefulWidget {
-  const RankingPlaceholderScreen({
-    super.key,
-    this.initialSection = 'ranking',
-  });
+  const RankingPlaceholderScreen({super.key, this.initialSection = 'ranking'});
 
   final String initialSection;
 
   @override
-  ConsumerState<RankingPlaceholderScreen> createState() => _RankingScreenState();
+  ConsumerState<RankingPlaceholderScreen> createState() =>
+      _RankingScreenState();
 }
 
 class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
@@ -102,9 +100,8 @@ class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
                       children: <Widget>[
                         Text(
                           '${value.current} dias',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         Text('Sequência atual · recorde ${value.best} dias'),
                       ],
@@ -222,9 +219,9 @@ class _RankingTile extends StatelessWidget {
           children: <Widget>[
             Text(
               '${entry.activeDays}d',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             Text(
               '${entry.totalMinutes} min',
