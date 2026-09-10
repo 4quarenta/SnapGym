@@ -72,13 +72,61 @@ jobs:
         run: flutter pub get
 
       - name: Format
-        run: dart format lib test
+        run: dart format lib test tool/competition_preview.dart
 
       - name: Analyze
         run: flutter analyze
 
       - name: Test
-        run: flutter test
+        run: flutter test --exclude-tags preview
+
+      - name: Generate readable UI previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter create --platforms=web --org com.snapgym --project-name snapgym .
+          flutter build web --release -t tool/competition_preview.dart
+
+          mkdir -p build/previews
+          python3 -m http.server 8080 --directory build/web >/tmp/snapgym-preview-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$chrome"
+
+          "$chrome" --headless=new --no-sandbox --hide-scrollbars \
+            --window-size=390,844 --force-device-scale-factor=2 \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=5000 \
+            --screenshot=build/previews/competition-ranking.png \
+            'http://127.0.0.1:8080/?section=ranking'
+
+          "$chrome" --headless=new --no-sandbox --hide-scrollbars \
+            --window-size=390,844 --force-device-scale-factor=2 \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=5000 \
+            --screenshot=build/previews/competition-challenges.png \
+            'http://127.0.0.1:8080/?section=challenges'
+
+          test -s build/previews/competition-ranking.png
+          test -s build/previews/competition-challenges.png
+
+      - name: Upload UI previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapgym-ui-previews
+          path: build/previews/*.png
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Persist generated Flutter files
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

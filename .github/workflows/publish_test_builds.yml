@@ -174,20 +174,22 @@ jobs:
           cat > RELEASE_NOTES.md <<EOF
           ## SnapGym — Test Build v${VERSION_NAME} (${BUILD_NUMBER})
 
-          ### Fase 4 — Social
-          - descoberta e busca de atletas
-          - perfis públicos com seguidores, seguindo e total de treinos
-          - seguir e deixar de seguir atletas
-          - feed social com o próprio usuário e atletas seguidos
-          - curtidas em check-ins
-          - comentários e exclusão do próprio comentário
-          - histórico de check-ins nos perfis
-          - sistema de atualização Android usando o APK publicado no GitHub Release
+          ### Fase 5 — Competição
+          - ranking semanal entre atletas seguidos e ranking global
+          - classificação priorizando dias ativos, com check-ins e minutos como desempate
+          - sequência atual, recorde pessoal e indicação de treino no dia
+          - criação de desafios por período e meta de dias ativos
+          - participação e saída de desafios
+          - progresso individual e ranking interno dos desafios
+          - regras de competição calculadas no backend
+          - melhorias de segurança, RLS e histórico de migrations
 
           ### Android
           **SnapGym-Android-dev.apk** é um APK release de desenvolvimento e pode ser instalado em aparelho real.
 
-          O APK fica armazenado somente no GitHub Release. O SnapGym usa o Supabase apenas para o catálogo de versão e para resolver, de forma segura, o download do asset do repositório privado. O SHA-256 do APK é validado antes da instalação.
+          Esta versão é também o primeiro teste A→B do atualizador interno: aparelhos com v0.4.0+5 devem receber a v${VERSION_NAME}+${BUILD_NUMBER} pelo próprio SnapGym.
+
+          O APK fica armazenado somente no GitHub Release. O SnapGym usa o Supabase para o catálogo de versão e para resolver com segurança o download do asset privado. O SHA-256 do APK é validado antes da instalação.
 
           ### iOS
           **SnapGym-iOS-Simulator-dev.app.zip** é destinado ao iOS Simulator. Em aparelhos reais, a distribuição futura será feita por TestFlight/App Store.
@@ -241,7 +243,7 @@ jobs:
 
           APK="$GITHUB_WORKSPACE/release-assets/SnapGym-Android-dev.apk"
           APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
-          UPDATE_NOTES="Atualização ${VERSION_NAME}: recursos sociais, perfis, seguir atletas, curtidas, comentários e melhorias da versão de teste."
+          UPDATE_NOTES="Atualização ${VERSION_NAME}: ranking semanal, sequências, desafios, progresso competitivo e melhorias de segurança."
 
           OIDC_TOKEN="$(curl --fail-with-body --silent --show-error \
             -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
