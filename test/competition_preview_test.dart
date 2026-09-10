@@ -114,13 +114,20 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    // Do not use pumpAndSettle here. Material progress indicators can keep a
+    // frame scheduled indefinitely, which makes screenshot generation time out
+    // even though the UI is already ready to capture.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Esta semana'), findsOneWidget);
     await _savePreview(boundaryKey, 'build/previews/competition-ranking.png');
 
     await tester.tap(find.text('Desafios').first);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Desafios ativos'), findsOneWidget);
     await _savePreview(boundaryKey, 'build/previews/competition-challenges.png');
-  });
+  }, timeout: const Timeout(Duration(minutes: 2)));
 }
 
 Future<void> _savePreview(GlobalKey key, String path) async {
