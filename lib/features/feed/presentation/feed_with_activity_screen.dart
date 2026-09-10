@@ -13,7 +13,7 @@ class FeedWithActivityScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(unreadActivityCountProvider).valueOrNull ?? 0;
+    final unread = ref.watch(unreadActivityCountProvider).when(data: (value) => value, loading: () => 0, error: (error, stack) => 0);
 
     return Stack(
       children: <Widget>[

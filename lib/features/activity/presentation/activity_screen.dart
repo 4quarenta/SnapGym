@@ -15,7 +15,7 @@ class ActivityScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(activityNotificationsProvider);
-    final unread = ref.watch(unreadActivityCountProvider).valueOrNull ?? 0;
+    final unread = ref.watch(unreadActivityCountProvider).when(data: (value) => value, loading: () => 0, error: (error, stack) => 0);
 
     return Scaffold(
       appBar: AppBar(
@@ -274,7 +274,7 @@ class _ActivityTile extends ConsumerWidget {
 
     switch (item.kind) {
       case ActivityNotificationKind.follow:
-        context.push('/users/${item.actorId}');
+        await context.push<void>('/users/${item.actorId}');
       case ActivityNotificationKind.like:
       case ActivityNotificationKind.comment:
         context.go('/feed');
