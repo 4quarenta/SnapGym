@@ -117,8 +117,15 @@ jobs:
             --screenshot=build/previews/competition-challenges.png \
             'http://127.0.0.1:8080/?section=challenges'
 
+          "$chrome" --headless=new --no-sandbox --hide-scrollbars \
+            --window-size=390,844 --force-device-scale-factor=2 \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=5000 \
+            --screenshot=build/previews/activity-center.png \
+            'http://127.0.0.1:8080/?section=activity'
+
           test -s build/previews/competition-ranking.png
           test -s build/previews/competition-challenges.png
+          test -s build/previews/activity-center.png
 
       - name: Upload UI previews
         uses: actions/upload-artifact@v4

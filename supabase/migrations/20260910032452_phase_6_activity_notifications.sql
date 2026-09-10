@@ -1,0 +1,299 @@
+create table if not exists public.activity_notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  actor_id uuid not null references public.profiles(id) on delete cascade,
+  kind text not null check (kind in ('follow','like','comment','challenge_join')),
+  checkin_id uuid references public.checkins(id) on delete cascade,
+  comment_id uuid references public.checkin_comments(id) on delete cascade,
+  challenge_id uuid references public.challenges(id) on delete cascade,
+  dedupe_key text not null check (char_length(dedupe_key) between 1 and 256),
+  read_at timestamptz,
+  created_at timestamptz not null default now(),
+  constraint activity_notifications_actor_not_recipient check (actor_id <> user_id),
+  constraint activity_notifications_shape check (
+    (kind = 'follow' and checkin_id is null and comment_id is null and challenge_id is null)
+    or (kind = 'like' and checkin_id is not null and comment_id is null and challenge_id is null)
+    or (kind = 'comment' and checkin_id is not null and comment_id is not null and challenge_id is null)
+    or (kind = 'challenge_join' and checkin_id is null and comment_id is null and challenge_id is not null)
+  )
+);
+
+create unique index if not exists activity_notifications_dedupe_idx
+  on public.activity_notifications(dedupe_key);
+create index if not exists activity_notifications_user_created_idx
+  on public.activity_notifications(user_id, created_at desc);
+create index if not exists activity_notifications_user_unread_idx
+  on public.activity_notifications(user_id, created_at desc)
+  where read_at is null;
+create index if not exists activity_notifications_actor_idx
+  on public.activity_notifications(actor_id);
+create index if not exists activity_notifications_checkin_idx
+  on public.activity_notifications(checkin_id) where checkin_id is not null;
+create index if not exists activity_notifications_comment_idx
+  on public.activity_notifications(comment_id) where comment_id is not null;
+create index if not exists activity_notifications_challenge_idx
+  on public.activity_notifications(challenge_id) where challenge_id is not null;
+
+alter table public.activity_notifications enable row level security;
+revoke all on table public.activity_notifications from public, anon, authenticated;
+grant select on table public.activity_notifications to authenticated;
+grant update(read_at) on table public.activity_notifications to authenticated;
+
+drop policy if exists activity_notifications_select_own on public.activity_notifications;
+create policy activity_notifications_select_own
+  on public.activity_notifications for select to authenticated
+  using ((select auth.uid()) = user_id);
+
+drop policy if exists activity_notifications_update_own on public.activity_notifications;
+create policy activity_notifications_update_own
+  on public.activity_notifications for update to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+
+create or replace function private.notify_social_follow()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.follower_id <> new.following_id then
+    insert into public.activity_notifications(user_id, actor_id, kind, dedupe_key)
+    values (
+      new.following_id,
+      new.follower_id,
+      'follow',
+      'follow:' || new.follower_id::text || ':' || new.following_id::text
+    )
+    on conflict (dedupe_key) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function private.notify_checkin_like()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_owner uuid;
+begin
+  select c.user_id into v_owner from public.checkins c where c.id = new.checkin_id;
+  if v_owner is not null and v_owner <> new.user_id then
+    insert into public.activity_notifications(user_id, actor_id, kind, checkin_id, dedupe_key)
+    values (
+      v_owner,
+      new.user_id,
+      'like',
+      new.checkin_id,
+      'like:' || new.checkin_id::text || ':' || new.user_id::text
+    )
+    on conflict (dedupe_key) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function private.remove_checkin_like_notification()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  delete from public.activity_notifications
+  where dedupe_key = 'like:' || old.checkin_id::text || ':' || old.user_id::text;
+  return old;
+end;
+$$;
+
+create or replace function private.notify_checkin_comment()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_owner uuid;
+begin
+  select c.user_id into v_owner from public.checkins c where c.id = new.checkin_id;
+  if v_owner is not null and v_owner <> new.user_id then
+    insert into public.activity_notifications(user_id, actor_id, kind, checkin_id, comment_id, dedupe_key)
+    values (
+      v_owner,
+      new.user_id,
+      'comment',
+      new.checkin_id,
+      new.id,
+      'comment:' || new.id::text
+    )
+    on conflict (dedupe_key) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function private.notify_challenge_join()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_creator uuid;
+begin
+  select ch.creator_id into v_creator from public.challenges ch where ch.id = new.challenge_id;
+  if v_creator is not null and v_creator <> new.user_id then
+    insert into public.activity_notifications(user_id, actor_id, kind, challenge_id, dedupe_key)
+    values (
+      v_creator,
+      new.user_id,
+      'challenge_join',
+      new.challenge_id,
+      'challenge_join:' || new.challenge_id::text || ':' || new.user_id::text
+    )
+    on conflict (dedupe_key) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.notify_social_follow() from public, anon, authenticated;
+revoke all on function private.notify_checkin_like() from public, anon, authenticated;
+revoke all on function private.remove_checkin_like_notification() from public, anon, authenticated;
+revoke all on function private.notify_checkin_comment() from public, anon, authenticated;
+revoke all on function private.notify_challenge_join() from public, anon, authenticated;
+
+drop trigger if exists social_follows_activity_notification on public.social_follows;
+create trigger social_follows_activity_notification
+  after insert on public.social_follows
+  for each row execute function private.notify_social_follow();
+
+drop trigger if exists checkin_likes_activity_notification on public.checkin_likes;
+create trigger checkin_likes_activity_notification
+  after insert on public.checkin_likes
+  for each row execute function private.notify_checkin_like();
+
+drop trigger if exists checkin_likes_activity_notification_remove on public.checkin_likes;
+create trigger checkin_likes_activity_notification_remove
+  after delete on public.checkin_likes
+  for each row execute function private.remove_checkin_like_notification();
+
+drop trigger if exists checkin_comments_activity_notification on public.checkin_comments;
+create trigger checkin_comments_activity_notification
+  after insert on public.checkin_comments
+  for each row execute function private.notify_checkin_comment();
+
+drop trigger if exists challenge_participants_activity_notification on public.challenge_participants;
+create trigger challenge_participants_activity_notification
+  after insert on public.challenge_participants
+  for each row execute function private.notify_challenge_join();
+
+create or replace function public.get_activity_notifications(
+  p_limit integer default 30,
+  p_offset integer default 0
+)
+returns table(
+  notification_id uuid,
+  kind text,
+  actor_id uuid,
+  actor_username text,
+  actor_display_name text,
+  checkin_id uuid,
+  workout_type text,
+  comment_body text,
+  challenge_id uuid,
+  challenge_title text,
+  read_at timestamptz,
+  created_at timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select
+    n.id,
+    n.kind,
+    n.actor_id,
+    p.username,
+    p.display_name,
+    n.checkin_id,
+    c.workout_type,
+    cm.body,
+    n.challenge_id,
+    ch.title,
+    n.read_at,
+    n.created_at
+  from public.activity_notifications n
+  join public.profiles p on p.id = n.actor_id
+  left join public.checkins c on c.id = n.checkin_id
+  left join public.checkin_comments cm on cm.id = n.comment_id
+  left join public.challenges ch on ch.id = n.challenge_id
+  where n.user_id = (select auth.uid())
+  order by n.created_at desc
+  limit greatest(1, least(coalesce(p_limit, 30), 100))
+  offset greatest(coalesce(p_offset, 0), 0)
+$$;
+
+create or replace function public.get_unread_activity_count()
+returns bigint
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select count(*)
+  from public.activity_notifications n
+  where n.user_id = (select auth.uid())
+    and n.read_at is null
+$$;
+
+create or replace function public.mark_activity_notification_read(p_notification_id uuid)
+returns boolean
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+  v_count integer;
+begin
+  update public.activity_notifications
+  set read_at = coalesce(read_at, now())
+  where id = p_notification_id
+    and user_id = (select auth.uid());
+  get diagnostics v_count = row_count;
+  return v_count > 0;
+end;
+$$;
+
+create or replace function public.mark_all_activity_notifications_read()
+returns integer
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+  v_count integer;
+begin
+  update public.activity_notifications
+  set read_at = now()
+  where user_id = (select auth.uid())
+    and read_at is null;
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+
+revoke all on function public.get_activity_notifications(integer, integer) from public, anon;
+grant execute on function public.get_activity_notifications(integer, integer) to authenticated;
+revoke all on function public.get_unread_activity_count() from public, anon;
+grant execute on function public.get_unread_activity_count() to authenticated;
+revoke all on function public.mark_activity_notification_read(uuid) from public, anon;
+grant execute on function public.mark_activity_notification_read(uuid) to authenticated;
+revoke all on function public.mark_all_activity_notifications_read() from public, anon;
+grant execute on function public.mark_all_activity_notifications_read() to authenticated;

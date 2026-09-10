@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:snapgym/core/theme/sg_theme.dart';
+import 'package:snapgym/features/activity/data/activity_repository.dart';
+import 'package:snapgym/features/activity/domain/activity_notification.dart';
+import 'package:snapgym/features/activity/presentation/activity_screen.dart';
 import 'package:snapgym/features/ranking/data/challenge_repository.dart';
 import 'package:snapgym/features/ranking/data/ranking_repository.dart';
 import 'package:snapgym/features/ranking/domain/challenge.dart';
@@ -9,10 +12,9 @@ import 'package:snapgym/features/ranking/presentation/ranking_placeholder_screen
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final initialSection = Uri.base.queryParameters['section'] == 'challenges'
-      ? 'challenges'
-      : 'ranking';
-  final now = DateTime(2026, 9, 9);
+  final requestedSection = Uri.base.queryParameters['section'] ?? 'ranking';
+  final initialSection = requestedSection == 'challenges' ? 'challenges' : 'ranking';
+  final now = DateTime(2026, 9, 10, 20, 30);
 
   runApp(
     ProviderScope(
@@ -94,13 +96,60 @@ void main() {
             ),
           ],
         ),
+        unreadActivityCountProvider.overrideWith((ref) async => 3),
+        activityNotificationsProvider.overrideWith(
+          (ref) async => <ActivityNotification>[
+            ActivityNotification(
+              id: 'n1',
+              kind: ActivityNotificationKind.comment,
+              actorId: '2',
+              actorUsername: 'maria',
+              actorDisplayName: 'Maria Silva',
+              checkinId: 'checkin-1',
+              workoutType: 'corrida',
+              commentBody: 'Esse ritmo ficou muito bom. Bora manter a sequência!',
+              createdAt: now.subtract(const Duration(minutes: 8)),
+            ),
+            ActivityNotification(
+              id: 'n2',
+              kind: ActivityNotificationKind.like,
+              actorId: '3',
+              actorUsername: 'carlos',
+              actorDisplayName: 'Carlos Souza',
+              checkinId: 'checkin-2',
+              workoutType: 'musculacao',
+              createdAt: now.subtract(const Duration(minutes: 34)),
+            ),
+            ActivityNotification(
+              id: 'n3',
+              kind: ActivityNotificationKind.follow,
+              actorId: '4',
+              actorUsername: 'ana',
+              actorDisplayName: 'Ana Lima',
+              createdAt: now.subtract(const Duration(hours: 2)),
+            ),
+            ActivityNotification(
+              id: 'n4',
+              kind: ActivityNotificationKind.challengeJoin,
+              actorId: '5',
+              actorUsername: 'pedro',
+              actorDisplayName: 'Pedro Alves',
+              challengeId: 'challenge-1',
+              challengeTitle: '4 dias na semana',
+              readAt: now.subtract(const Duration(hours: 3)),
+              createdAt: now.subtract(const Duration(hours: 3)),
+            ),
+          ],
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: SgTheme.dark,
-        home: Scaffold(
-          body: RankingPlaceholderScreen(initialSection: initialSection),
-        ),
+        home: requestedSection == 'activity'
+            ? const ActivityScreen()
+            : Scaffold(
+                body: RankingPlaceholderScreen(initialSection: initialSection),
+              ),
       ),
     ),
   );
