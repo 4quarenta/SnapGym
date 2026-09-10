@@ -9,15 +9,26 @@ import '../domain/ranking_entry.dart';
 import 'challenges_section.dart';
 
 class RankingPlaceholderScreen extends ConsumerStatefulWidget {
-  const RankingPlaceholderScreen({super.key});
+  const RankingPlaceholderScreen({
+    super.key,
+    this.initialSection = 'ranking',
+  });
+
+  final String initialSection;
 
   @override
   ConsumerState<RankingPlaceholderScreen> createState() => _RankingScreenState();
 }
 
 class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
-  String _section = 'ranking';
+  late String _section;
   String _scope = 'following';
+
+  @override
+  void initState() {
+    super.initState();
+    _section = widget.initialSection == 'challenges' ? 'challenges' : 'ranking';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +72,10 @@ class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
               },
             ),
             const SizedBox(height: SgSpacing.lg),
-            if (_section == 'ranking') _buildRanking(context) else const ChallengesSection(),
+            if (_section == 'ranking')
+              _buildRanking(context)
+            else
+              const ChallengesSection(),
           ],
         ),
       ),
@@ -136,7 +150,9 @@ class _RankingScreenState extends ConsumerState<RankingPlaceholderScreen> {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: SgSpacing.xs),
-        const Text('Dias ativos definem a posição. Check-ins e minutos desempatam.'),
+        const Text(
+          'Dias ativos definem a posição. Check-ins e minutos desempatam.',
+        ),
         const SizedBox(height: SgSpacing.sm),
         ranking.when(
           data: (entries) => entries.isEmpty
