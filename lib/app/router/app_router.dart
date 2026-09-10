@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,10 +15,13 @@ import '../../features/profile/presentation/public_profile_screen.dart';
 import '../../features/ranking/presentation/ranking_placeholder_screen.dart';
 import 'scaffold_with_navigation.dart';
 
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authRouterNotifierProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/feed',
     refreshListenable: auth,
     redirect: (context, state) {

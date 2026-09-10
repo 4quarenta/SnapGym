@@ -20,7 +20,10 @@ class SnapGymApp extends ConsumerWidget {
       themeMode: ThemeMode.dark,
       routerConfig: router,
       builder: (context, child) {
-        return UpdateGate(child: child ?? const SizedBox.shrink());
+        return UpdateGate(
+          navigatorKey: rootNavigatorKey,
+          child: child ?? const SizedBox.shrink(),
+        );
       },
     );
   }

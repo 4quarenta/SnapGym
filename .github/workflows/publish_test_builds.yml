@@ -174,20 +174,15 @@ jobs:
           cat > RELEASE_NOTES.md <<EOF
           ## SnapGym — Test Build v${VERSION_NAME} (${BUILD_NUMBER})
 
-          ### Fase 5 — Competição
-          - ranking semanal entre atletas seguidos e ranking global
-          - classificação priorizando dias ativos, com check-ins e minutos como desempate
-          - sequência atual, recorde pessoal e indicação de treino no dia
-          - criação de desafios por período e meta de dias ativos
-          - participação e saída de desafios
-          - progresso individual e ranking interno dos desafios
-          - regras de competição calculadas no backend
-          - melhorias de segurança, RLS e histórico de migrations
+          ### Hotfix do atualizador Android
+          - corrige a apresentação do aviso de nova versão usando o Navigator raiz do app
+          - adiciona teste automatizado para impedir regressão do diálogo de atualização
+          - mantém ranking semanal, sequências e desafios da Fase 5
 
           ### Android
           **SnapGym-Android-dev.apk** é um APK release de desenvolvimento e pode ser instalado em aparelho real.
 
-          Esta versão é também o primeiro teste A→B do atualizador interno: aparelhos com v0.4.0+5 devem receber a v${VERSION_NAME}+${BUILD_NUMBER} pelo próprio SnapGym.
+          Devido ao bug identificado na v0.4.0+5, esta hotfix precisa ser instalada manualmente uma única vez. A partir desta versão, as próximas builds serão usadas para validar novamente a atualização pelo próprio SnapGym.
 
           O APK fica armazenado somente no GitHub Release. O SnapGym usa o Supabase para o catálogo de versão e para resolver com segurança o download do asset privado. O SHA-256 do APK é validado antes da instalação.
 
@@ -243,7 +238,7 @@ jobs:
 
           APK="$GITHUB_WORKSPACE/release-assets/SnapGym-Android-dev.apk"
           APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
-          UPDATE_NOTES="Atualização ${VERSION_NAME}: ranking semanal, sequências, desafios, progresso competitivo e melhorias de segurança."
+          UPDATE_NOTES="Atualização ${VERSION_NAME}: correção do aviso de atualização Android e recursos de competição da Fase 5."
 
           OIDC_TOKEN="$(curl --fail-with-body --silent --show-error \
             -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
