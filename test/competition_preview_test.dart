@@ -1,8 +1,4 @@
-import 'dart:io';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snapgym/core/theme/sg_theme.dart';
@@ -13,128 +9,140 @@ import 'package:snapgym/features/ranking/domain/ranking_entry.dart';
 import 'package:snapgym/features/ranking/presentation/ranking_placeholder_screen.dart';
 
 void main() {
-  testWidgets('exports competition previews', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 844));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets(
+    'exports competition ranking preview',
+    (tester) async {
+      final previewKey = GlobalKey();
+      await _pumpCompetition(tester, previewKey);
 
-    final boundaryKey = GlobalKey();
-    final now = DateTime(2026, 9, 9);
+      expect(find.text('Esta semana'), findsOneWidget);
+      await expectLater(
+        find.byKey(previewKey),
+        matchesGoldenFile('goldens/competition-ranking.png'),
+      );
+    },
+    tags: 'preview',
+  );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          weeklyRankingProvider('following').overrideWith(
-            (ref) async => const <RankingEntry>[
-              RankingEntry(
-                userId: '1',
-                username: 'john',
-                displayName: 'John Alleff',
-                activeDays: 5,
-                checkins: 6,
-                totalMinutes: 245,
-                rank: 1,
-              ),
-              RankingEntry(
-                userId: '2',
-                username: 'maria',
-                displayName: 'Maria Silva',
-                activeDays: 4,
-                checkins: 5,
-                totalMinutes: 220,
-                rank: 2,
-              ),
-              RankingEntry(
-                userId: '3',
-                username: 'carlos',
-                displayName: 'Carlos Souza',
-                activeDays: 4,
-                checkins: 4,
-                totalMinutes: 190,
-                rank: 3,
-              ),
-              RankingEntry(
-                userId: '4',
-                username: 'ana',
-                displayName: 'Ana Lima',
-                activeDays: 3,
-                checkins: 4,
-                totalMinutes: 175,
-                rank: 4,
-              ),
-            ],
-          ),
-          streakProvider.overrideWith(
-            (ref) async => const StreakSummary(
-              current: 6,
-              best: 11,
-              trainedToday: true,
+  testWidgets(
+    'exports competition challenges preview',
+    (tester) async {
+      final previewKey = GlobalKey();
+      await _pumpCompetition(tester, previewKey);
+
+      await tester.tap(find.text('Desafios').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Desafios ativos'), findsOneWidget);
+      await expectLater(
+        find.byKey(previewKey),
+        matchesGoldenFile('goldens/competition-challenges.png'),
+      );
+    },
+    tags: 'preview',
+  );
+}
+
+Future<void> _pumpCompetition(WidgetTester tester, GlobalKey previewKey) async {
+  await tester.binding.setSurfaceSize(const Size(390, 844));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+
+  final now = DateTime(2026, 9, 9);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        weeklyRankingProvider('following').overrideWith(
+          (ref) async => const <RankingEntry>[
+            RankingEntry(
+              userId: '1',
+              username: 'john',
+              displayName: 'John Alleff',
+              activeDays: 5,
+              checkins: 6,
+              totalMinutes: 245,
+              rank: 1,
             ),
-          ),
-          activeChallengesProvider.overrideWith(
-            (ref) async => <ChallengeSummary>[
-              ChallengeSummary(
-                id: 'c1',
-                title: '4 dias na semana',
-                description: 'Treine em quatro dias diferentes até domingo.',
-                startsOn: now.subtract(const Duration(days: 2)),
-                endsOn: now.add(const Duration(days: 4)),
-                targetDays: 4,
-                creatorId: '1',
-                creatorUsername: 'john',
-                participantCount: 18,
-                joined: true,
-                progressDays: 3,
-              ),
-              ChallengeSummary(
-                id: 'c2',
-                title: 'Constância de setembro',
-                description: 'Acumule 12 dias ativos durante o mês.',
-                startsOn: DateTime(2026, 9),
-                endsOn: DateTime(2026, 9, 30),
-                targetDays: 12,
-                creatorId: '2',
-                creatorUsername: 'maria',
-                participantCount: 42,
-                joined: false,
-                progressDays: 0,
-              ),
-            ],
-          ),
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: SgTheme.dark,
-          home: Scaffold(
-            body: RepaintBoundary(
-              key: boundaryKey,
-              child: const RankingPlaceholderScreen(),
+            RankingEntry(
+              userId: '2',
+              username: 'maria',
+              displayName: 'Maria Silva',
+              activeDays: 4,
+              checkins: 5,
+              totalMinutes: 220,
+              rank: 2,
             ),
+            RankingEntry(
+              userId: '3',
+              username: 'carlos',
+              displayName: 'Carlos Souza',
+              activeDays: 4,
+              checkins: 4,
+              totalMinutes: 190,
+              rank: 3,
+            ),
+            RankingEntry(
+              userId: '4',
+              username: 'ana',
+              displayName: 'Ana Lima',
+              activeDays: 3,
+              checkins: 4,
+              totalMinutes: 175,
+              rank: 4,
+            ),
+          ],
+        ),
+        streakProvider.overrideWith(
+          (ref) async => const StreakSummary(
+            current: 6,
+            best: 11,
+            trainedToday: true,
+          ),
+        ),
+        activeChallengesProvider.overrideWith(
+          (ref) async => <ChallengeSummary>[
+            ChallengeSummary(
+              id: 'c1',
+              title: '4 dias na semana',
+              description: 'Treine em quatro dias diferentes até domingo.',
+              startsOn: now.subtract(const Duration(days: 2)),
+              endsOn: now.add(const Duration(days: 4)),
+              targetDays: 4,
+              creatorId: '1',
+              creatorUsername: 'john',
+              participantCount: 18,
+              joined: true,
+              progressDays: 3,
+            ),
+            ChallengeSummary(
+              id: 'c2',
+              title: 'Constância de setembro',
+              description: 'Acumule 12 dias ativos durante o mês.',
+              startsOn: DateTime(2026, 9),
+              endsOn: DateTime(2026, 9, 30),
+              targetDays: 12,
+              creatorId: '2',
+              creatorUsername: 'maria',
+              participantCount: 42,
+              joined: false,
+              progressDays: 0,
+            ),
+          ],
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: SgTheme.dark,
+        home: Scaffold(
+          body: RepaintBoundary(
+            key: previewKey,
+            child: const RankingPlaceholderScreen(),
           ),
         ),
       ),
-    );
+    ),
+  );
 
-    // Do not use pumpAndSettle here. Material progress indicators can keep a
-    // frame scheduled indefinitely, which makes screenshot generation time out
-    // even though the UI is already ready to capture.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Esta semana'), findsOneWidget);
-    await _savePreview(boundaryKey, 'build/previews/competition-ranking.png');
-
-    await tester.tap(find.text('Desafios').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Desafios ativos'), findsOneWidget);
-    await _savePreview(boundaryKey, 'build/previews/competition-challenges.png');
-  }, timeout: const Timeout(Duration(minutes: 2)));
-}
-
-Future<void> _savePreview(GlobalKey key, String path) async {
-  final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-  final image = await boundary.toImage(pixelRatio: 2);
-  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-  final file = File(path);
-  await file.parent.create(recursive: true);
-  await file.writeAsBytes(bytes!.buffer.asUint8List());
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
 }
