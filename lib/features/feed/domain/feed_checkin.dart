@@ -14,6 +14,7 @@ class FeedCheckin {
     required this.likeCount,
     required this.commentCount,
     required this.likedByMe,
+    this.avatarKey,
   });
 
   final String id;
@@ -25,6 +26,7 @@ class FeedCheckin {
   final DateTime performedAt;
   final String? username;
   final String? displayName;
+  final String? avatarKey;
   final int likeCount;
   final int commentCount;
   final bool likedByMe;

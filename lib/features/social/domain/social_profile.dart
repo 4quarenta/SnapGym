@@ -8,6 +8,7 @@ class SocialProfile {
     required this.followingCount,
     required this.checkinCount,
     required this.isFollowing,
+    this.avatarKey,
   });
 
   factory SocialProfile.fromJson(Map<String, dynamic> json) {
@@ -16,6 +17,7 @@ class SocialProfile {
       username: json['username'] as String?,
       displayName: json['display_name'] as String?,
       bio: json['bio'] as String?,
+      avatarKey: json['avatar_key'] as String?,
       followerCount: _asInt(json['follower_count']),
       followingCount: _asInt(json['following_count']),
       checkinCount: _asInt(json['checkin_count']),
@@ -27,6 +29,7 @@ class SocialProfile {
   final String? username;
   final String? displayName;
   final String? bio;
+  final String? avatarKey;
   final int followerCount;
   final int followingCount;
   final int checkinCount;

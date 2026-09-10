@@ -64,6 +64,7 @@ class FeedRepository {
           performedAt: DateTime.parse(row['performed_at'] as String).toLocal(),
           username: row['username'] as String?,
           displayName: row['display_name'] as String?,
+          avatarKey: row['avatar_key'] as String?,
           likeCount: _asInt(row['like_count']),
           commentCount: _asInt(row['comment_count']),
           likedByMe: row['liked_by_me'] as bool? ?? false,
