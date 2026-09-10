@@ -45,7 +45,9 @@ class _UpdateGateState extends ConsumerState<UpdateGate> {
         if (_navigatorRetries < 3) {
           _navigatorRetries += 1;
           _checked = false;
-          WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _checkForUpdate(),
+          );
         }
         return;
       }

@@ -5,9 +5,7 @@ void main() {
   testWidgets('renders basic SnapGym shell', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          body: Center(child: Text('SnapGym')),
-        ),
+        home: Scaffold(body: Center(child: Text('SnapGym'))),
       ),
     );
 

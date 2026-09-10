@@ -16,7 +16,8 @@ class _FakeUpdateRepository extends UpdateRepository {
       versionName: '0.5.1',
       buildNumber: 7,
       downloadUrl: 'https://example.invalid/update.apk',
-      sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      sha256:
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       releaseNotes: 'Correção do atualizador.',
       isMandatory: false,
       publishedAt: DateTime.utc(2026, 9, 10),
@@ -25,32 +26,34 @@ class _FakeUpdateRepository extends UpdateRepository {
 }
 
 void main() {
-  testWidgets(
-    'shows update dialog when gate is mounted above the Navigator',
-    (tester) async {
-      final navigatorKey = GlobalKey<NavigatorState>();
+  testWidgets('shows update dialog when gate is mounted above the Navigator', (
+    tester,
+  ) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            updateRepositoryProvider.overrideWithValue(_FakeUpdateRepository()),
-          ],
-          child: MaterialApp(
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          updateRepositoryProvider.overrideWithValue(_FakeUpdateRepository()),
+        ],
+        child: MaterialApp(
+          navigatorKey: navigatorKey,
+          home: const Scaffold(body: Text('SnapGym')),
+          builder: (context, child) => UpdateGate(
             navigatorKey: navigatorKey,
-            home: const Scaffold(body: Text('SnapGym')),
-            builder: (context, child) => UpdateGate(
-              navigatorKey: navigatorKey,
-              child: child ?? const SizedBox.shrink(),
-            ),
+            child: child ?? const SizedBox.shrink(),
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
 
-      expect(find.text('Atualização disponível'), findsOneWidget);
-      expect(find.text('A versão 0.5.1 do SnapGym está disponível.'), findsOneWidget);
-      expect(find.text('Atualizar agora'), findsOneWidget);
-    },
-  );
+    expect(find.text('Atualização disponível'), findsOneWidget);
+    expect(
+      find.text('A versão 0.5.1 do SnapGym está disponível.'),
+      findsOneWidget,
+    );
+    expect(find.text('Atualizar agora'), findsOneWidget);
+  });
 }
