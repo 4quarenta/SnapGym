@@ -8,9 +8,9 @@ import '../../../core/theme/sg_spacing.dart';
 import '../../../core/ui/sg_avatar.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../feed/data/feed_repository.dart';
-import '../../feed/domain/feed_checkin.dart';
 import '../../social/data/social_repository.dart';
 import '../../social/domain/social_profile.dart';
+import 'workout_gallery_section.dart';
 
 class PublicProfileScreen extends ConsumerWidget {
   const PublicProfileScreen({required this.userId, super.key});
@@ -52,13 +52,6 @@ class PublicProfileScreen extends ConsumerWidget {
                   : _ProfileHeader(profile: value),
             ),
             const SizedBox(height: SgSpacing.xl),
-            Text(
-              'Treinos',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: SgSpacing.md),
             checkins.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => const _ProfileMessage(
@@ -68,18 +61,7 @@ class PublicProfileScreen extends ConsumerWidget {
                   ? const _ProfileMessage(
                       message: 'Este atleta ainda não publicou treinos.',
                     )
-                  : Column(
-                      children: items
-                          .map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: SgSpacing.md,
-                              ),
-                              child: _WorkoutHistoryCard(item: item),
-                            ),
-                          )
-                          .toList(),
-                    ),
+                  : WorkoutGallerySection(items: items),
             ),
           ],
         ),
@@ -103,42 +85,63 @@ class _ProfileHeader extends ConsumerWidget {
         padding: const EdgeInsets.all(SgSpacing.xl),
         child: Column(
           children: <Widget>[
-            SgAvatar(
-              label: profile.name,
-              avatarKey: profile.avatarKey,
-              radius: 44,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                SgAvatar(
+                  label: profile.name,
+                  avatarKey: profile.avatarKey,
+                  radius: 44,
+                ),
+                const SizedBox(width: SgSpacing.xl),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      _Stat(value: profile.checkinCount, label: 'treinos'),
+                      _Stat(
+                        value: profile.followerCount,
+                        label: 'seguidores',
+                      ),
+                      _Stat(
+                        value: profile.followingCount,
+                        label: 'seguindo',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: SgSpacing.md),
-            Text(
-              profile.name,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                profile.name,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
             if (profile.handle != null) ...<Widget>[
               const SizedBox(height: SgSpacing.xxs),
-              Text(
-                profile.handle!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: SgColors.moonstone,
-                  fontWeight: FontWeight.w700,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  profile.handle!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: SgColors.moonstone,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
             if (profile.bio?.trim().isNotEmpty == true) ...<Widget>[
               const SizedBox(height: SgSpacing.md),
-              Text(profile.bio!, textAlign: TextAlign.center),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(profile.bio!),
+              ),
             ],
-            const SizedBox(height: SgSpacing.xl),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                _Stat(value: profile.checkinCount, label: 'treinos'),
-                _Stat(value: profile.followerCount, label: 'seguidores'),
-                _Stat(value: profile.followingCount, label: 'seguindo'),
-              ],
-            ),
             const SizedBox(height: SgSpacing.xl),
             SizedBox(
               width: double.infinity,
@@ -197,62 +200,6 @@ class _Stat extends StatelessWidget {
           ).textTheme.bodySmall?.copyWith(color: SgColors.darkTextSecondary),
         ),
       ],
-    );
-  }
-}
-
-class _WorkoutHistoryCard extends StatelessWidget {
-  const _WorkoutHistoryCard({required this.item});
-
-  final FeedCheckin item;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Row(
-        children: <Widget>[
-          SizedBox(
-            width: 108,
-            height: 108,
-            child: Image.network(
-              item.photoUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const ColoredBox(
-                color: SgColors.darkSurfaceElevated,
-                child: Center(
-                  child: PhosphorIcon(PhosphorIconsBold.imageBroken),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(SgSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    item.workoutType.label,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: SgSpacing.xxs),
-                  Text('${item.durationMinutes} min'),
-                  const SizedBox(height: SgSpacing.sm),
-                  Text(
-                    '${item.likeCount} curtidas • ${item.commentCount} comentários',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: SgColors.darkTextSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

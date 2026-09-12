@@ -7,7 +7,7 @@ import '../../../core/theme/sg_colors.dart';
 import '../../../core/theme/sg_radius.dart';
 import '../../../core/theme/sg_spacing.dart';
 import '../../../core/ui/sg_brand.dart';
-import '../../../core/ui/sg_primary_button.dart';
+import '../../../core/ui/sg_avatar.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../social/data/social_repository.dart';
 import '../../social/domain/checkin_comment.dart';
@@ -47,12 +47,6 @@ class FeedScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: SgSpacing.lg),
-            SgPrimaryButton(
-              label: 'Registrar meu treino',
-              icon: const PhosphorIcon(PhosphorIconsBold.camera),
-              onPressed: () => context.go('/checkin'),
-            ),
-            const SizedBox(height: SgSpacing.xl),
             feed.when(
               loading: () => const Center(
                 child: Padding(
@@ -105,10 +99,10 @@ class _CheckinCard extends ConsumerWidget {
               padding: const EdgeInsets.all(SgSpacing.md),
               child: Row(
                 children: <Widget>[
-                  CircleAvatar(
-                    backgroundColor: SgColors.moonstone.withValues(alpha: 0.18),
-                    foregroundColor: SgColors.moonstone,
-                    child: Text(item.authorName.characters.first.toUpperCase()),
+                  SgAvatar(
+                    label: item.authorName,
+                    avatarKey: item.avatarKey,
+                    radius: 22,
                   ),
                   const SizedBox(width: SgSpacing.sm),
                   Expanded(
@@ -131,14 +125,51 @@ class _CheckinCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Text(
-                    _timeAgo(item.performedAt),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: SgColors.darkTextSecondary,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      Text(
+                        _timeAgo(item.performedAt),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: SgColors.darkTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: SgSpacing.xxs),
+                      const PhosphorIcon(
+                        PhosphorIconsRegular.dotsThree,
+                        size: 18,
+                        color: SgColors.darkTextSecondary,
+                      ),
+                    ],
                   ),
                 ],
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              SgSpacing.md,
+              0,
+              SgSpacing.md,
+              SgSpacing.md,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  _title,
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: SgSpacing.xs),
+                Text(
+                  '${item.workoutType.label} • ${item.durationMinutes} min',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: SgColors.darkTextSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
           AspectRatio(
@@ -169,26 +200,8 @@ class _CheckinCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Wrap(
-                  spacing: SgSpacing.sm,
-                  runSpacing: SgSpacing.xs,
-                  children: <Widget>[
-                    _StatChip(
-                      icon: PhosphorIconsBold.barbell,
-                      label: item.workoutType.label,
-                    ),
-                    _StatChip(
-                      icon: PhosphorIconsBold.clock,
-                      label: '${item.durationMinutes} min',
-                    ),
-                  ],
-                ),
-                if (item.note != null && item.note!.trim().isNotEmpty) ...[
-                  const SizedBox(height: SgSpacing.md),
-                  Text(item.note!, style: textTheme.bodyMedium),
-                ],
-                const SizedBox(height: SgSpacing.md),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     _SocialAction(
                       icon: item.likedByMe
@@ -206,12 +219,28 @@ class _CheckinCard extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const Divider(height: SgSpacing.xl),
+                Text(
+                  item.commentCount == 0
+                      ? 'Seja o primeiro a comentar'
+                      : '${item.commentCount} comentários',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: SgColors.darkTextSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  String get _title {
+    final note = item.note?.trim();
+    if (note != null && note.isNotEmpty) return note;
+    return 'Treino de ${item.workoutType.label.toLowerCase()}';
   }
 
   Future<void> _toggleLike(WidgetRef ref) async {
@@ -457,35 +486,6 @@ class _CommentTile extends StatelessWidget {
             icon: const PhosphorIcon(PhosphorIconsRegular.trash, size: 19),
           ),
       ],
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SgSpacing.sm,
-        vertical: SgSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: SgColors.moonstone.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(SgRadius.pill),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          PhosphorIcon(icon, size: 16, color: SgColors.moonstone),
-          const SizedBox(width: SgSpacing.xs),
-          Text(label),
-        ],
-      ),
     );
   }
 }

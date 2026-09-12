@@ -11,6 +11,14 @@ class ScaffoldWithNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
+      floatingActionButton: navigationShell.currentIndex == 0
+          ? FloatingActionButton(
+              onPressed: () => context.push('/checkin'),
+              tooltip: 'Registrar treino',
+              child: const PhosphorIcon(PhosphorIconsBold.plus),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) {
@@ -24,16 +32,6 @@ class ScaffoldWithNavigation extends StatelessWidget {
             icon: PhosphorIcon(PhosphorIconsRegular.house),
             selectedIcon: PhosphorIcon(PhosphorIconsFill.house),
             label: 'Início',
-          ),
-          NavigationDestination(
-            icon: PhosphorIcon(PhosphorIconsRegular.compass),
-            selectedIcon: PhosphorIcon(PhosphorIconsFill.compass),
-            label: 'Explorar',
-          ),
-          NavigationDestination(
-            icon: PhosphorIcon(PhosphorIconsRegular.camera),
-            selectedIcon: PhosphorIcon(PhosphorIconsFill.camera),
-            label: 'Check-in',
           ),
           NavigationDestination(
             icon: PhosphorIcon(PhosphorIconsRegular.chartBar),
