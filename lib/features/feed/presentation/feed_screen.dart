@@ -7,7 +7,6 @@ import '../../../core/theme/sg_colors.dart';
 import '../../../core/theme/sg_radius.dart';
 import '../../../core/theme/sg_spacing.dart';
 import '../../../core/ui/sg_brand.dart';
-import '../../../core/ui/sg_primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../social/data/social_repository.dart';
 import '../../social/domain/checkin_comment.dart';
@@ -47,12 +46,6 @@ class FeedScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: SgSpacing.lg),
-            SgPrimaryButton(
-              label: 'Registrar meu treino',
-              icon: const PhosphorIcon(PhosphorIconsBold.camera),
-              onPressed: () => context.go('/checkin'),
-            ),
-            const SizedBox(height: SgSpacing.xl),
             feed.when(
               loading: () => const Center(
                 child: Padding(

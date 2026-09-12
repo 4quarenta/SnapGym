@@ -70,6 +70,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/activity',
         builder: (context, state) => const ActivityScreen(),
       ),
+      GoRoute(
+        path: '/explore',
+        builder: (context, state) => const ExploreScreen(),
+      ),
+      GoRoute(
+        path: '/checkin',
+        builder: (context, state) => const CheckinScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavigation(navigationShell: navigationShell);
@@ -80,22 +88,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/feed',
                 builder: (context, state) => const FeedWithActivityScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/explore',
-                builder: (context, state) => const ExploreScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/checkin',
-                builder: (context, state) => const CheckinScreen(),
               ),
             ],
           ),
