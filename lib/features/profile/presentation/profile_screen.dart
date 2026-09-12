@@ -9,11 +9,11 @@ import '../../../core/theme/sg_spacing.dart';
 import '../../../core/ui/sg_avatar.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../feed/data/feed_repository.dart';
-import '../../feed/domain/feed_checkin.dart';
 import '../../social/data/social_repository.dart';
 import '../data/profile_repository.dart';
 import '../domain/profile_validation.dart';
 import '../domain/user_profile.dart';
+import 'workout_gallery_section.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -96,21 +96,61 @@ class _ProfileContent extends ConsumerWidget {
             padding: const EdgeInsets.all(SgSpacing.xl),
             child: Column(
               children: <Widget>[
-                _EditableAvatar(profile: profile),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    _EditableAvatar(profile: profile),
+                    const SizedBox(width: SgSpacing.xl),
+                    Expanded(
+                      child: social.when(
+                        loading: () => const SizedBox(
+                          height: 48,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (error, stackTrace) => const SizedBox.shrink(),
+                        data: (value) => value == null
+                            ? const SizedBox.shrink()
+                            : Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  _ProfileStat(
+                                    value: value.checkinCount,
+                                    label: 'treinos',
+                                  ),
+                                  _ProfileStat(
+                                    value: value.followerCount,
+                                    label: 'seguidores',
+                                  ),
+                                  _ProfileStat(
+                                    value: value.followingCount,
+                                    label: 'seguindo',
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: SgSpacing.md),
-                Text(
-                  displayName,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    displayName,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: SgSpacing.xxs),
-                Text(
-                  username,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: SgColors.moonstone,
-                    fontWeight: FontWeight.w700,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    username,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: SgColors.moonstone,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 if (profile.bio != null) ...<Widget>[
@@ -121,33 +161,6 @@ class _ProfileContent extends ConsumerWidget {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
-                const SizedBox(height: SgSpacing.xl),
-                social.when(
-                  loading: () => const SizedBox(
-                    height: 48,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (error, stackTrace) => const SizedBox.shrink(),
-                  data: (value) => value == null
-                      ? const SizedBox.shrink()
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            _ProfileStat(
-                              value: value.checkinCount,
-                              label: 'treinos',
-                            ),
-                            _ProfileStat(
-                              value: value.followerCount,
-                              label: 'seguidores',
-                            ),
-                            _ProfileStat(
-                              value: value.followingCount,
-                              label: 'seguindo',
-                            ),
-                          ],
-                        ),
-                ),
                 if (email != null) ...<Widget>[
                   const SizedBox(height: SgSpacing.lg),
                   Text(
@@ -186,13 +199,6 @@ class _ProfileContent extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: SgSpacing.xl),
-        Text(
-          'Meus treinos',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: SgSpacing.md),
         checkins.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => const _ProfileMessage(
@@ -202,16 +208,7 @@ class _ProfileContent extends ConsumerWidget {
               ? const _ProfileMessage(
                   message: 'Seus check-ins aparecerão aqui.',
                 )
-              : Column(
-                  children: items
-                      .map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: SgSpacing.md),
-                          child: _OwnWorkoutCard(item: item),
-                        ),
-                      )
-                      .toList(),
-                ),
+              : WorkoutGallerySection(items: items),
         ),
       ],
     );
@@ -399,62 +396,6 @@ class _ProfileStat extends StatelessWidget {
           ).textTheme.bodySmall?.copyWith(color: SgColors.darkTextSecondary),
         ),
       ],
-    );
-  }
-}
-
-class _OwnWorkoutCard extends StatelessWidget {
-  const _OwnWorkoutCard({required this.item});
-
-  final FeedCheckin item;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Row(
-        children: <Widget>[
-          SizedBox(
-            width: 108,
-            height: 108,
-            child: Image.network(
-              item.photoUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const ColoredBox(
-                color: SgColors.darkSurfaceElevated,
-                child: Center(
-                  child: PhosphorIcon(PhosphorIconsBold.imageBroken),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(SgSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    item.workoutType.label,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: SgSpacing.xxs),
-                  Text('${item.durationMinutes} min'),
-                  const SizedBox(height: SgSpacing.sm),
-                  Text(
-                    '${item.likeCount} curtidas • ${item.commentCount} comentários',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: SgColors.darkTextSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
